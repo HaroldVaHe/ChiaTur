@@ -1,23 +1,27 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { FontAwesome5, MaterialIcons, Entypo, Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';  // Usando useRouter de expo-router
+import ViewGastronomia from '../Gastronomia/ViewGastronomia';
 
 export default function MainMenu() {
-  const navigation = useNavigation();
+  const router = useRouter();  // Usamos useRouter
 
   return (
     <View style={styles.container}>
       <Image
-  source={require('@/assets/images/DiosaLunaChia.jpg')} // asegúrate de poner la extensión correcta
-  style={styles.avatar}
-/>
-
+        source={require('@/assets/images/DiosaLunaChia.jpg')} // asegúrate de poner la extensión correcta
+        style={styles.avatar}
+      />
+      
       <Text style={styles.title}>ChíaTur</Text>
       <Text style={styles.subtitle}>¿Qué quieres hacer?</Text>
 
       <View style={styles.buttonGrid}>
-        <TouchableOpacity style={styles.button} >
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('../ViewGastronomia')}  // Usamos router.push en lugar de navigate
+        >
           <FontAwesome5 name="utensils" size={32} color="#FFC107" />
           <Text style={styles.buttonText}>Gastronomía</Text>
         </TouchableOpacity>
