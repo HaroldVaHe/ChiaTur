@@ -20,7 +20,7 @@ export default function MainMenu() {
       <View style={styles.buttonGrid}>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.push('../ViewGastronomia')}  // Usamos router.push en lugar de navigate
+          onPress={() => router.push('../Gastronomia/ViewGastronomia')}  // Usamos router.push en lugar de navigate
         >
           <FontAwesome5 name="utensils" size={32} color="#FFC107" />
           <Text style={styles.buttonText}>Gastronomía</Text>
