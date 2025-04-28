@@ -1,23 +1,58 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
-import axios from 'axios';
+import { useLocalSearchParams } from 'expo-router'; // Importamos useLocalSearchParams
+import { APIResponse } from '@/Configuraciones/Responses'; // Ajusta la ruta si tu archivo está en otra carpeta
 
-// Define el tipo de cada mensaje
 interface Message {
   id: string;
   sender: 'user' | 'bot';
   text: string;
 }
 
-// Tu API KEY correcta
 const GEMINI_API_KEY = 'AIzaSyDo0NUkRMYfqvdJWrCn0Ty5LU8NAXHW4tw';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const ChatGastronomia = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const { restaurante } = useLocalSearchParams(); // Usamos useLocalSearchParams para obtener el parámetro 'restaurante'
+
+  // Parseamos el restaurante si está presente
+  const restauranteData = restaurante ? JSON.parse(restaurante as string) : null;
+
+  // Mostrar mensaje de saludo y luego hacer la pregunta sobre el restaurante
+  useEffect(() => {
+    if (messages.length === 0) {
+      // Enviar saludo inicial del usuario
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        sender: 'user',
+        text: 'Hola, IA!',
+      };
+      setMessages([userMessage]);  // Agregar mensaje de saludo
+
+      // Esperar la respuesta de la IA antes de enviar la pregunta del restaurante
+      setTimeout(() => {
+        const botResponseMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          sender: 'bot',
+          text: '¡Hola! ¿Cómo puedo ayudarte hoy?',
+        };
+        setMessages((prev) => [...prev, botResponseMessage]);  // Respuesta de la IA
+
+        // Después del saludo, el usuario pregunta por el restaurante
+        setTimeout(() => {
+          const restaurantQueryMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            sender: 'user',
+            text: `Quiero saber más acerca del restaurante "${restauranteData?.nombre}". ¿Qué me puedes contar?`,
+          };
+          setMessages((prev) => [...prev, restaurantQueryMessage]);  // Pregunta del usuario sobre el restaurante
+        }, 1000);  // Retraso para hacer la pregunta después de la respuesta de la IA
+      }, 1000);  // Retraso para dar tiempo a que la IA responda al saludo
+    }
+  }, [messages.length, restauranteData]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -33,31 +68,33 @@ const ChatGastronomia = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        GEMINI_API_URL,
-        {
+      const response = await fetch(GEMINI_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
           contents: [
             {
-              role: 'user',
-              parts: [
-                { text: input }
-              ]
+              parts: [{ text: input }]  // Enviamos el mensaje del usuario como parte del cuerpo de la solicitud
             }
           ]
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+        })
+      });
 
-      const botText = response.data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Lo siento, no entendí eso.';
+      if (!response.ok) {
+        throw new Error(`Error de red: ${response.status}`);
+      }
+
+      const data: APIResponse = await response.json(); // Aquí ya usa tu tipo
+
+      // Verificamos si 'candidates' es un arreglo y tiene al menos un elemento
+      const botText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Lo siento, no entendí eso.';
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
-        text: botText,
+        text: botText, // La respuesta del bot será la respuesta generada por la API
       };
 
       setMessages((prev) => [...prev, botMessage]);
@@ -82,11 +119,6 @@ const ChatGastronomia = () => {
 
   return (
     <View style={styles.container}>
-      {/* Botón para regresar si quieres */}
-      {/* <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>← Volver</Text>
-      </TouchableOpacity> */}
-
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
