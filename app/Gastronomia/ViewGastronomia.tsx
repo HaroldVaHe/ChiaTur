@@ -116,7 +116,7 @@ export default function ViewGastronomia() {
             {/* Botón Ver más debajo de cada restaurante */}
             <Link
               href={{
-                pathname: '../Gastronomia/ChatGastronomia',  // Ruta a la vista ChatGastronomia
+                pathname: '/Gastronomia/ChatGastronomia',  // Ruta a la vista ChatGastronomia
                 params: { restaurante: JSON.stringify(item) },  // Serializar el objeto del restaurante
               }}
             >

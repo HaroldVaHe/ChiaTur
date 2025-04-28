@@ -1,81 +1,109 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router'; // Usamos useLocalSearchParams para obtener los parámetros de la ruta
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
+import axios from 'axios';
 
-interface Restaurante {
-  id: string;
-  nombre: string;
-  latitud: number;
-  longitud: number;
-  direccion: string;
-}
-
+// Define el tipo de cada mensaje
 interface Message {
-  text: string;
+  id: string;
   sender: 'user' | 'bot';
+  text: string;
 }
+
+// Tu API KEY correcta
+const GEMINI_API_KEY = 'AIzaSyDo0NUkRMYfqvdJWrCn0Ty5LU8NAXHW4tw';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
 const ChatGastronomia = () => {
-  const { restaurante } = useLocalSearchParams();
-  const [restauranteData, setRestauranteData] = useState<Restaurante | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]); // Estado para los mensajes del chat
-  const [newMessage, setNewMessage] = useState(''); // Estado para el nuevo mensaje
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
-    if (restaurante) {
-      setRestauranteData(JSON.parse(restaurante as string)); // Parseamos el restaurante
-    }
-  }, [restaurante]);
+  const sendMessage = async () => {
+    if (!input.trim()) return;
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Agregar mensaje del usuario
-      const userMessage: Message = { text: newMessage, sender: 'user' };
-      setMessages((prevMessages) => [...prevMessages, userMessage]);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      sender: 'user',
+      text: input,
+    };
 
-      // Respuesta simulada del bot (IA)
-      const botResponse: Message = { text: "Gracias por tu mensaje, ¿cómo puedo ayudarte?", sender: 'bot' };
-      setMessages((prevMessages) => [...prevMessages, botResponse]);
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
 
-      setNewMessage(''); // Limpiar el campo de texto
+    try {
+      const response = await axios.post(
+        GEMINI_API_URL,
+        {
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: input }
+              ]
+            }
+          ]
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const botText = response.data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Lo siento, no entendí eso.';
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: botText,
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Error al contactar a Gemini:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        sender: 'bot',
+        text: 'Error al contactar a la IA. Intenta de nuevo.',
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!restauranteData) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
+  const renderItem = ({ item }: { item: Message }) => (
+    <View style={[styles.messageContainer, item.sender === 'user' ? styles.userMessage : styles.botMessage]}>
+      <Text style={styles.messageText}>{item.text}</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Mostrar la información del restaurante */}
-      <View style={styles.restauranteInfo}>
-        <Text style={styles.title}>{restauranteData.nombre}</Text>
-        <Text>{restauranteData.direccion}</Text>
-        <Text>Latitud: {restauranteData.latitud}</Text>
-        <Text>Longitud: {restauranteData.longitud}</Text>
-      </View>
+      {/* Botón para regresar si quieres */}
+      {/* <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Text style={styles.backButtonText}>← Volver</Text>
+      </TouchableOpacity> */}
 
-      {/* Mostrar los mensajes del chat */}
       <FlatList
         data={messages}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={[styles.message, item.sender === 'user' ? styles.userMessage : styles.botMessage]}>
-            <Text style={styles.messageText}>{item.text}</Text>
-          </View>
-        )}
-        style={styles.chatContainer}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.chat}
       />
 
-      {/* Campo de entrada de mensaje */}
+      {loading && <ActivityIndicator size="small" color="#0000ff" style={{ marginVertical: 10 }} />}
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholder="Escribe tu mensaje"
+          value={input}
+          onChangeText={setInput}
+          placeholder="Escribe tu mensaje..."
         />
-        <TouchableOpacity onPress={handleSendMessage} style={styles.sendButton}>
+        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
           <Text style={styles.sendButtonText}>Enviar</Text>
         </TouchableOpacity>
       </View>
@@ -83,26 +111,51 @@ const ChatGastronomia = () => {
   );
 };
 
+export default ChatGastronomia;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white', padding: 20 },
-  restauranteInfo: { marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  chatContainer: { flex: 1, marginBottom: 20 },
-  message: { marginVertical: 5, padding: 10, borderRadius: 8, maxWidth: '80%' },
-  userMessage: { backgroundColor: '#4CAF50', alignSelf: 'flex-end' },
-  botMessage: { backgroundColor: '#FFEB3B', alignSelf: 'flex-start' },
-  messageText: { color: 'white', fontSize: 16 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#FFF', padding: 10 },
+  chat: { paddingVertical: 10 },
+  messageContainer: {
+    marginVertical: 5,
+    padding: 10,
+    borderRadius: 10,
+    maxWidth: '80%',
+  },
+  userMessage: {
+    backgroundColor: '#DCF8C6',
+    alignSelf: 'flex-end',
+  },
+  botMessage: {
+    backgroundColor: '#F1F0F0',
+    alignSelf: 'flex-start',
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderColor: '#DDD',
+    paddingTop: 10,
+  },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    backgroundColor: '#F1F0F0',
     borderRadius: 20,
-    padding: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     marginRight: 10,
   },
-  sendButton: { backgroundColor: '#FFEB3B', borderRadius: 20, padding: 10 },
-  sendButtonText: { color: '#000', fontWeight: 'bold' },
+  sendButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  sendButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
 });
-
-export default ChatGastronomia;
