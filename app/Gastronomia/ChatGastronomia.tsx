@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router'; // Importamos useLocalSearchParams
+import { useLocalSearchParams } from 'expo-router';
 import { APIResponse } from '@/Configuraciones/Responses'; // Ajusta la ruta si tu archivo está en otra carpeta
 
 interface Message {
@@ -10,91 +10,59 @@ interface Message {
 }
 
 const GEMINI_API_KEY = 'AIzaSyDo0NUkRMYfqvdJWrCn0Ty5LU8NAXHW4tw';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const ChatGastronomia = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const { restaurante } = useLocalSearchParams(); // Usamos useLocalSearchParams para obtener el parámetro 'restaurante'
+  const { restaurante } = useLocalSearchParams();
 
-  // Parseamos el restaurante si está presente
   const restauranteData = restaurante ? JSON.parse(restaurante as string) : null;
 
-  // Mostrar mensaje de saludo y luego hacer la pregunta sobre el restaurante
   useEffect(() => {
-    if (messages.length === 0) {
-      // Enviar saludo inicial del usuario
-      const userMessage: Message = {
+    if (messages.length === 0 && restauranteData) {
+      const restaurantQueryMessage: Message = {
         id: Date.now().toString(),
         sender: 'user',
-        text: 'Hola, IA!',
+        text: `Estoy en Chía, Cundinamarca, Colombia. El restaurante llamado "${restauranteData.nombre}" es un restaurante local de esta zona. Me gustaría que me brindaras información detallada sobre él, como el tipo de comida que ofrece, su posible historia, ubicación aproximada y cualquier dato interesante que puedas aportar. Si no encuentras información exacta, por favor genera una descripción creativa basada en restaurantes locales similares de la región.`,
       };
-      setMessages([userMessage]);  // Agregar mensaje de saludo
+      setMessages([restaurantQueryMessage]);
 
-      // Esperar la respuesta de la IA antes de enviar la pregunta del restaurante
-      setTimeout(() => {
-        const botResponseMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          sender: 'bot',
-          text: '¡Hola! ¿Cómo puedo ayudarte hoy?',
-        };
-        setMessages((prev) => [...prev, botResponseMessage]);  // Respuesta de la IA
-
-        // Después del saludo, el usuario pregunta por el restaurante
-        setTimeout(() => {
-          const restaurantQueryMessage: Message = {
-            id: (Date.now() + 2).toString(),
-            sender: 'user',
-            text: `Quiero saber más acerca del restaurante "${restauranteData?.nombre}". ¿Qué me puedes contar?`,
-          };
-          setMessages((prev) => [...prev, restaurantQueryMessage]);  // Pregunta del usuario sobre el restaurante
-        }, 1000);  // Retraso para hacer la pregunta después de la respuesta de la IA
-      }, 1000);  // Retraso para dar tiempo a que la IA responda al saludo
+      // Automáticamente enviar la consulta sobre el restaurante
+      sendBotResponse(restaurantQueryMessage.text);
     }
   }, [messages.length, restauranteData]);
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: input,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+  const sendBotResponse = async (userText: string) => {
     setLoading(true);
-
     try {
       const response = await fetch(GEMINI_API_URL, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: input }]  // Enviamos el mensaje del usuario como parte del cuerpo de la solicitud
-            }
-          ]
-        })
+              parts: [{ text: userText }],
+            },
+          ],
+        }),
       });
 
       if (!response.ok) {
         throw new Error(`Error de red: ${response.status}`);
       }
 
-      const data: APIResponse = await response.json(); // Aquí ya usa tu tipo
+      const data: APIResponse = await response.json();
 
-      // Verificamos si 'candidates' es un arreglo y tiene al menos un elemento
-      const botText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Lo siento, no entendí eso.';
+      const botText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Lo siento, no encontré información sobre este restaurante.';
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
-        text: botText, // La respuesta del bot será la respuesta generada por la API
+        text: botText,
       };
 
       setMessages((prev) => [...prev, botMessage]);
@@ -111,8 +79,25 @@ const ChatGastronomia = () => {
     }
   };
 
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      sender: 'user',
+      text: input.trim(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    await sendBotResponse(input.trim());
+    setInput('');
+  };
+
   const renderItem = ({ item }: { item: Message }) => (
-    <View style={[styles.messageContainer, item.sender === 'user' ? styles.userMessage : styles.botMessage]}>
+    <View style={[
+      styles.messageContainer,
+      item.sender === 'user' ? styles.userMessage : styles.botMessage
+    ]}>
       <Text style={styles.messageText}>{item.text}</Text>
     </View>
   );
@@ -126,7 +111,7 @@ const ChatGastronomia = () => {
         contentContainerStyle={styles.chat}
       />
 
-      {loading && <ActivityIndicator size="small" color="#0000ff" style={{ marginVertical: 10 }} />}
+      {loading && <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 10 }} />}
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -134,8 +119,9 @@ const ChatGastronomia = () => {
           value={input}
           onChangeText={setInput}
           placeholder="Escribe tu mensaje..."
+          editable={!loading}
         />
-        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+        <TouchableOpacity onPress={sendMessage} style={styles.sendButton} disabled={loading}>
           <Text style={styles.sendButtonText}>Enviar</Text>
         </TouchableOpacity>
       </View>
