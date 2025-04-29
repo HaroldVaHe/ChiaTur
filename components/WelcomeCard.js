@@ -39,7 +39,7 @@ const WelcomeCard = () => {
       {/* Botón de flecha */}
       <TouchableOpacity
         style={styles.arrowButton}
-        onPress={() => router.push('/MenuPrincipal/MainMenu')} // ✅ Aquí la navegación
+        onPress={() => router.push('/Autentificacion/LoginScreen')} // ✅ Aquí la navegación
       >
         <AntDesign name="arrowright" size={24} color="white" />
       </TouchableOpacity>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { APIResponse } from '@/Configuraciones/Responses'; // Ajusta la ruta si tu archivo está en otra carpeta
+import { APIResponse } from '@/utils/Responses'; // Ajusta la ruta si tu archivo está en otra carpeta
 
 interface Message {
   id: string;
