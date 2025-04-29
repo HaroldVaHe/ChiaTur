@@ -26,12 +26,14 @@ export default function MainMenu() {
           <Text style={styles.buttonText}>Gastronomía</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button}onPress={() => router.push('../Cultura/ViewCultura')}  // Usamos router.push en lugar de navigate
+        >
           <MaterialIcons name="museum" size={32} color="#FFC107" />
           <Text style={styles.buttonText}>Cultura</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button}onPress={() => router.push('../Entretenimiento/ViewEntretenimiento')}  // Usamos router.push en lugar de navigate
+        >
           <Entypo name="game-controller" size={32} color="#FFC107" />
           <Text style={styles.buttonText}>Entretenimiento</Text>
         </TouchableOpacity>
