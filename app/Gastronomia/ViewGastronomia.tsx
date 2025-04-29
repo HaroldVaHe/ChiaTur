@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Link } from 'expo-router';  // Importar Link de Expo Router
@@ -15,6 +15,7 @@ export default function ViewGastronomia() {
   const [restaurantes, setRestaurantes] = useState<Restaurante[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRestaurante, setSelectedRestaurante] = useState<Restaurante | null>(null); // Estado para el restaurante seleccionado
+  const mapRef = useRef<MapView | null>(null); // Referencia al MapView
 
   // Función para obtener la dirección usando OpenCage Geocoder
   const getDireccion = async (lat: number, lon: number) => {
@@ -69,6 +70,19 @@ export default function ViewGastronomia() {
     fetchRestaurantes();
   }, []);
 
+  // Función para centrar el mapa en el restaurante seleccionado
+  const handleRestaurantPress = (restaurante: Restaurante) => {
+    setSelectedRestaurante(restaurante);
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: restaurante.latitud,
+        longitude: restaurante.longitud,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      });
+    }
+  };
+
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
@@ -76,6 +90,7 @@ export default function ViewGastronomia() {
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}  // Asignamos la referencia al MapView
         style={styles.map}
         initialRegion={{
           latitude: 4.8666,
@@ -84,10 +99,9 @@ export default function ViewGastronomia() {
           longitudeDelta: 0.02,
         }}
       >
-        {/* Solo mostrar los marcadores del restaurante seleccionado */}
-        {restaurantes
-          .filter((restaurante) => selectedRestaurante ? restaurante.id === selectedRestaurante.id : true)
-          .map((restaurante) => (
+        {/* Si no hay restaurante seleccionado, mostramos todos los marcadores */}
+        {selectedRestaurante === null &&
+          restaurantes.map((restaurante) => (
             <Marker
               key={restaurante.id}
               coordinate={{
@@ -95,9 +109,22 @@ export default function ViewGastronomia() {
                 longitude: restaurante.longitud,
               }}
               title={restaurante.nombre}
-              pinColor={selectedRestaurante?.id === restaurante.id ? 'red' : 'red'} // Cambiar color de la flecha a rojo
+              pinColor="red"  // Hacer el pin rojo
+              onPress={() => handleRestaurantPress(restaurante)}  // Al presionar un marcador, se selecciona el restaurante
             />
           ))}
+
+        {/* Si hay un restaurante seleccionado, mostramos solo ese marcador */}
+        {selectedRestaurante && (
+          <Marker
+            coordinate={{
+              latitude: selectedRestaurante.latitud,
+              longitude: selectedRestaurante.longitud,
+            }}
+            title={selectedRestaurante.nombre}
+            pinColor="red"  // Hacer el pin rojo
+          />
+        )}
       </MapView>
 
       <FlatList
@@ -106,7 +133,7 @@ export default function ViewGastronomia() {
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <View style={styles.restauranteItem}>
-            <TouchableOpacity onPress={() => setSelectedRestaurante(item)}>
+            <TouchableOpacity onPress={() => handleRestaurantPress(item)}>
               <Text style={styles.restauranteTitle}>{item.nombre}</Text>
               <Text style={styles.restauranteDesc}>
                 {item.direccion} {/* Mostrar la dirección */}
@@ -149,6 +176,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 10,
     alignItems: 'center',
+    width: '100%', // Esto hace que el botón ocupe todo el ancho disponible
   },
   buttonText: {
     fontSize: 16,

@@ -36,10 +36,14 @@ export default function MainMenu() {
           <Text style={styles.buttonText}>Entretenimiento</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}>
-          <Feather name="shopping-bag" size={32} color="#FFC107" />
-          <Text style={styles.buttonText}>Shopping</Text>
-        </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.button}
+  onPress={() => router.push('../Shopping/ViewShopping')} // Agregamos navegación
+>
+  <Feather name="shopping-bag" size={32} color="#FFC107" />
+  <Text style={styles.buttonText}>Shopping</Text>
+</TouchableOpacity>
+
       </View>
     </View>
   );
