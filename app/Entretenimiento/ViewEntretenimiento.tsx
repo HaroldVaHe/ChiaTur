@@ -39,19 +39,29 @@ export default function ViewEntretenimiento() {
     const fetchLugares = async () => {
       try {
         const query = `
-          [out:json];
-          node["leisure"](4.83,-74.1,4.9,-74.03); // Lugares de entretenimiento
+          [out:json][timeout:25];
+          (
+            node["leisure"](4.83,-74.1,4.9,-74.03);
+            node["amenity"="nightclub"](4.83,-74.1,4.9,-74.03);
+            node["amenity"="bar"](4.83,-74.1,4.9,-74.03);
+            node["amenity"="pub"](4.83,-74.1,4.9,-74.03);
+            node["amenity"="biergarten"](4.83,-74.1,4.9,-74.03);
+            node["shop"="mall"](4.83,-74.1,4.9,-74.03);
+            node["building"="retail"](4.83,-74.1,4.9,-74.03);
+          );
           out body;
         `;
         const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
         const response = await fetch(url);
         const data = await response.json();
 
-        const parsed: Entretenimiento[] = await Promise.all(data.elements.map(async (el: any) => {
+        const elementosConNombre = data.elements.filter((el: any) => el.tags?.name);
+
+        const parsed: Entretenimiento[] = await Promise.all(elementosConNombre.map(async (el: any) => {
           const direccion = await getDireccion(el.lat, el.lon);
           return {
             id: el.id.toString(),
-            nombre: el.tags?.name || "Lugar sin nombre",
+            nombre: el.tags.name,
             latitud: el.lat,
             longitud: el.lon,
             direccion,

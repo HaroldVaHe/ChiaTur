@@ -1,51 +1,55 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { FontAwesome5, MaterialIcons, Entypo, Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';  // Usando useRouter de expo-router
-import ViewGastronomia from '../Gastronomia/ViewGastronomia';
+import { useRouter } from 'expo-router';
 
 export default function MainMenu() {
-  const router = useRouter();  // Usamos useRouter
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/DiosaLunaChia.jpg')} // asegúrate de poner la extensión correcta
+        source={require('@/assets/images/DiosaLunaChia.jpg')}
         style={styles.avatar}
       />
-      
+
       <Text style={styles.title}>ChíaTur</Text>
       <Text style={styles.subtitle}>¿Qué quieres hacer?</Text>
 
       <View style={styles.buttonGrid}>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.push('../Gastronomia/ViewGastronomia')}  // Usamos router.push en lugar de navigate
+          onPress={() => router.push('../Gastronomia/ViewGastronomia')}
         >
           <FontAwesome5 name="utensils" size={32} color="#FFC107" />
           <Text style={styles.buttonText}>Gastronomía</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}onPress={() => router.push('../Cultura/ViewCultura')}  // Usamos router.push en lugar de navigate
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('../Cultura/ViewCultura')}
         >
           <MaterialIcons name="museum" size={32} color="#FFC107" />
           <Text style={styles.buttonText}>Cultura</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}onPress={() => router.push('../Entretenimiento/ViewEntretenimiento')}  // Usamos router.push en lugar de navigate
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('../Entretenimiento/ViewEntretenimiento')}
         >
           <Entypo name="game-controller" size={32} color="#FFC107" />
-          <Text style={styles.buttonText}>Entretenimiento</Text>
+          <Text style={[styles.buttonText, styles.smallButtonText]}>
+            Entretenimiento
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-  style={styles.button}
-  onPress={() => router.push('../Shopping/ViewShopping')} // Agregamos navegación
->
-  <Feather name="shopping-bag" size={32} color="#FFC107" />
-  <Text style={styles.buttonText}>Shopping</Text>
-</TouchableOpacity>
-
+          style={styles.button}
+          onPress={() => router.push('../Shopping/ViewShopping')}
+        >
+          <Feather name="shopping-bag" size={32} color="#FFC107" />
+          <Text style={styles.buttonText}>Shopping</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -94,5 +98,8 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 14,
+  },
+  smallButtonText: {
+    fontSize: 12,  // tamaño de fuente reducido para "Entretenimiento"
   },
 });
