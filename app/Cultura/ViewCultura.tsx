@@ -1,8 +1,25 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Dimensions, LogBox } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { Link, useRouter, usePathname } from 'expo-router'; // Importaciones corregidas
-import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons'; // Importar los íconos
+import { Link, useRouter, usePathname } from 'expo-router';
+import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  interpolate,
+  runOnJS
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+
+// Ignorar advertencias específicas que podrían afectar el rendimiento pero no la funcionalidad
+LogBox.ignoreLogs([
+  'Non-serializable values were found in the navigation state',
+  'VirtualizedLists should never be nested'
+]);
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+  const MAX_TRANSLATE_Y = -SCREEN_HEIGHT * 0.5;
 
 interface Cultura {
   id: string;
@@ -19,6 +36,12 @@ export default function ViewCultura() {
   const mapRef = useRef<MapView | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Variables para el sheet
+  const translateY = useSharedValue(0);
+  const context = useSharedValue({ y: 0 });
+  const [isExpanded, setIsExpanded] = useState(false);
+  const animationInProgress = useRef(false);
 
   const getDireccion = async (lat: number, lon: number) => {
     const apiKey = '24977e6dc8004c0a90f1f0a256a0d69e';
@@ -94,72 +117,189 @@ export default function ViewCultura() {
     }
   };
 
+  const updateIsExpanded = (value: boolean) => {
+    setIsExpanded(value);
+    animationInProgress.current = false;
+  };
+
+  // Gesto para el sheet - limitado solo a la parte superior del sheet (el handle)
+  const gesture = Gesture.Pan()
+    .onStart(() => {
+      if (animationInProgress.current) return;
+      context.value = { y: translateY.value };
+    })
+    .onUpdate((event) => {
+      if (animationInProgress.current) return;
+      translateY.value = Math.max(Math.min(event.translationY + context.value.y, 0), MAX_TRANSLATE_Y);
+    })
+    .onEnd(() => {
+      if (animationInProgress.current) return;
+      
+      // Snap to either top or bottom position
+      const shouldBringUp = translateY.value < -SCREEN_HEIGHT * 0.2;
+      
+      animationInProgress.current = true;
+      
+      if (shouldBringUp) {
+        translateY.value = withTiming(MAX_TRANSLATE_Y, { duration: 300 }, () => {
+          runOnJS(updateIsExpanded)(true);
+        });
+      } else {
+        translateY.value = withTiming(0, { duration: 300 }, () => {
+          runOnJS(updateIsExpanded)(false);
+        });
+      }
+    });
+    
+  // Asegurar que la lista se actualice cuando cambia el estado del sheet
+  useEffect(() => {
+    // Solo para mantener la referencia de si hay una animación en curso
+    const timer = setTimeout(() => {
+      animationInProgress.current = false;
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [isExpanded]);
+
+  const toggleSheet = () => {
+    if (animationInProgress.current) return;
+    
+    animationInProgress.current = true;
+    
+    if (isExpanded) {
+      // Si está expandido, vuelve a la posición original
+      translateY.value = withTiming(0, { duration: 250 }, () => {
+        runOnJS(updateIsExpanded)(false);
+      });
+    } else {
+      // Si está colapsado, expande
+      translateY.value = withTiming(MAX_TRANSLATE_Y, { duration: 250 }, () => {
+        runOnJS(updateIsExpanded)(true);
+      });
+    }
+  };
+
+  // Estilos animados para el sheet
+  const rBottomSheetStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+    };
+  });
+
+  // Estilo animado para el mapa
+  const rMapStyle = useAnimatedStyle(() => {
+    return {
+      height: interpolate(
+        translateY.value,
+        [MAX_TRANSLATE_Y, 0],
+        [SCREEN_HEIGHT * 0.2, SCREEN_HEIGHT * 0.5]
+      ),
+    };
+  });
+
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text style={styles.loadingText}>Cargando lugares culturales...</Text>
+      </View>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={{
-          latitude: 4.8666,
-          longitude: -74.065,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        }}
-      >
-        {selectedLugar === null &&
-          lugares.map((lugar) => (
+    <GestureHandlerRootView style={styles.container}>
+      <Animated.View style={[styles.mapContainer, rMapStyle]}>
+        <MapView
+          ref={mapRef}
+          style={styles.mapView}
+          initialRegion={{
+            latitude: 4.8666,
+            longitude: -74.065,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+          }}
+        >
+          {selectedLugar === null &&
+            lugares.map((lugar) => (
+              <Marker
+                key={lugar.id}
+                coordinate={{
+                  latitude: lugar.latitud,
+                  longitude: lugar.longitud,
+                }}
+                title={lugar.nombre}
+                pinColor="red"
+                onPress={() => handleLugarPress(lugar)}
+              />
+            ))}
+
+          {selectedLugar && (
             <Marker
-              key={lugar.id}
               coordinate={{
-                latitude: lugar.latitud,
-                longitude: lugar.longitud,
+                latitude: selectedLugar.latitud,
+                longitude: selectedLugar.longitud,
               }}
-              title={lugar.nombre}
+              title={selectedLugar.nombre}
               pinColor="red"
-              onPress={() => handleLugarPress(lugar)}
             />
-          ))}
+          )}
+        </MapView>
+      </Animated.View>
 
-        {selectedLugar && (
-          <Marker
-            coordinate={{
-              latitude: selectedLugar.latitud,
-              longitude: selectedLugar.longitud,
-            }}
-            title={selectedLugar.nombre}
-            pinColor="red"
-          />
-        )}
-      </MapView>
-
-      <FlatList
-        data={lugares}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <TouchableOpacity onPress={() => handleLugarPress(item)}>
-              <Text style={styles.title}>{item.nombre}</Text>
-              <Text style={styles.desc}>{item.direccion}</Text>
-            </TouchableOpacity>
-
-            <Link
-              href={{
-                pathname: '../Cultura/ChatCultura',
-                params: { lugar: JSON.stringify(item) },
-              }}
-            >
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Ver más</Text>
-              </TouchableOpacity>
-            </Link>
+      <Animated.View style={[styles.bottomSheet, rBottomSheetStyle]}>
+        <GestureDetector gesture={gesture}>
+          <View style={styles.sheetHeader}>
+            <View style={styles.line} />
           </View>
-        )}
-      />
+        </GestureDetector>
+        
+        <TouchableOpacity 
+          style={styles.sheetButton}
+          onPress={toggleSheet}
+          activeOpacity={0.7}
+        >
+          <AntDesign 
+            name={isExpanded ? "down" : "up"} 
+            size={24} 
+            color="#4CAF50" 
+          />
+          <Text style={styles.sheetButtonText}>
+            {isExpanded ? "Ver menos" : "Ver más lugares"}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.listContainer}>
+          <FlatList
+            data={lugares}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            scrollEnabled={true}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={true}
+            onEndReachedThreshold={0.1}
+            renderItem={({ item }) => (
+              <View style={styles.item}>
+                <TouchableOpacity onPress={() => handleLugarPress(item)}>
+                  <Text style={styles.title}>{item.nombre}</Text>
+                  <Text style={styles.desc}>{item.direccion}</Text>
+                </TouchableOpacity>
+
+                <Link
+                  href={{
+                    pathname: '../Cultura/ChatCultura',
+                    params: { lugar: JSON.stringify(item) },
+                  }}
+                  asChild
+                >
+                  <TouchableOpacity style={styles.button}>
+                    <Text style={styles.buttonText}>Ver más</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+            )}
+          />
+        </View>
+      </Animated.View>
 
       {/* Menú inferior */}
       <View style={styles.bottomMenuContainer}>
@@ -180,7 +320,7 @@ export default function ViewCultura() {
             <Text style={styles.menuText}>Cultura</Text>
           </TouchableOpacity>
 
-          <View style={{ width: 15 }} /> {/* Menos espacio entre los íconos */}
+          <View style={{ width: 15 }} />
 
           <TouchableOpacity
             style={[styles.menuItem, pathname.includes('Entretenimiento') && styles.activeItem]}
@@ -206,22 +346,104 @@ export default function ViewCultura() {
           <AntDesign name="home" size={28} color="#FFD700" />
         </TouchableOpacity>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
-  map: { width: '100%', height: '50%' },
-  list: { padding: 10 },
+  container: { 
+    flex: 1, 
+    backgroundColor: 'white' 
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#4CAF50',
+  },
+  mapContainer: { 
+    width: '100%', 
+    height: '50%',
+    zIndex: 1
+  },
+  mapView: { 
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  bottomSheet: {
+    backgroundColor: 'white',
+    width: '100%',
+    position: 'absolute',
+    top: '50%',
+    height: SCREEN_HEIGHT * 0.7, // Altura ajustada
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    zIndex: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -10,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  line: {
+    width: 75,
+    height: 4,
+    backgroundColor: 'grey',
+    alignSelf: 'center',
+    marginVertical: 15,
+    borderRadius: 2,
+  },
+  sheetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    marginBottom: 5,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    marginHorizontal: 20,
+  },
+  sheetButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginLeft: 8,
+  },
+  sheetHeader: {
+    width: '100%',
+  },
+  listContainer: {
+    flex: 1,
+    width: '100%',
+  },
+  list: { 
+    padding: 10,
+    paddingBottom: 80, // Ajustado para eliminar el espacio en blanco
+  },
   item: {
     marginBottom: 15,
     backgroundColor: '#4CAF50',
     borderRadius: 8,
     padding: 10,
   },
-  title: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
-  desc: { fontSize: 14, color: '#fff' },
+  title: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#fff' 
+  },
+  desc: { 
+    fontSize: 14, 
+    color: '#fff' 
+  },
   button: {
     backgroundColor: '#FFEB3B',
     borderRadius: 5,
@@ -242,6 +464,7 @@ const styles = StyleSheet.create({
     right: 0,
     height: 70,
     alignItems: 'center',
+    zIndex: 3,
   },
   bottomMenu: {
     flexDirection: 'row',
