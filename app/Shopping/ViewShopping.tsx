@@ -1,7 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { Link } from 'expo-router';
+import { Link, useRouter, usePathname } from 'expo-router';
+import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
+import { LogBox } from 'react-native';
+
+// Ignorar el warning específico
+LogBox.ignoreLogs([
+  'Warning: Text strings must be rendered within a <Text> component.',
+]);
 
 interface Tienda {
   id: string;
@@ -15,7 +22,9 @@ export default function ViewTiendas() {
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTienda, setSelectedTienda] = useState<Tienda | null>(null);
-  const mapRef = useRef<MapView | null>(null); // Referencia para el mapa
+  const mapRef = useRef<MapView | null>(null);
+  const router = useRouter();
+  const pathname = usePathname(); // Para detectar la ruta actual
 
   const getDireccion = async (lat: number, lon: number) => {
     const apiKey = '24977e6dc8004c0a90f1f0a256a0d69e';
@@ -88,7 +97,7 @@ export default function ViewTiendas() {
   return (
     <View style={styles.container}>
       <MapView
-        ref={mapRef}  // Asignamos la referencia al MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude: 4.8666,
@@ -97,7 +106,6 @@ export default function ViewTiendas() {
           longitudeDelta: 0.02,
         }}
       >
-        {/* Si no hay tienda seleccionada, mostramos todos los marcadores */}
         {selectedTienda === null && tiendas.map((tienda) => (
           <Marker
             key={tienda.id}
@@ -106,12 +114,10 @@ export default function ViewTiendas() {
               longitude: tienda.longitud,
             }}
             title={tienda.nombre}
-            pinColor="red"  // Todos los marcadores son rojos
-            onPress={() => handleTiendaPress(tienda)}  // Al presionar un marcador, se selecciona la tienda
+            pinColor="red"
+            onPress={() => handleTiendaPress(tienda)}
           />
         ))}
-
-        {/* Si hay una tienda seleccionada, solo mostramos ese marcador */}
         {selectedTienda && (
           <Marker
             coordinate={{
@@ -119,7 +125,7 @@ export default function ViewTiendas() {
               longitude: selectedTienda.longitud,
             }}
             title={selectedTienda.nombre}
-            pinColor="red"  // El pin seleccionado es rojo
+            pinColor="red"
           />
         )}
       </MapView>
@@ -129,10 +135,10 @@ export default function ViewTiendas() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={styles.item}>
+          <View style={styles.lugarItem}>
             <TouchableOpacity onPress={() => handleTiendaPress(item)}>
-              <Text style={styles.title}>{item.nombre}</Text>
-              <Text style={styles.desc}>{item.direccion}</Text>
+              <Text style={styles.lugarTitle}>{item.nombre}</Text>
+              <Text style={styles.lugarDesc}>{item.direccion}</Text>
             </TouchableOpacity>
 
             <Link
@@ -148,6 +154,52 @@ export default function ViewTiendas() {
           </View>
         )}
       />
+
+      {/* Menú inferior */}
+      <View style={styles.bottomMenuContainer}>
+        <View style={styles.bottomMenu}>
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Gastronomia') && styles.activeItem]}
+            onPress={() => router.push('../Gastronomia/ViewGastronomia')}
+          >
+            <FontAwesome5 name="utensils" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Gastronomía</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Cultura') && styles.activeItem]}
+            onPress={() => router.push('../Cultura/ViewCultura')}
+          >
+            <MaterialIcons name="museum" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Cultura</Text>
+          </TouchableOpacity>
+
+          <View style={{ width: 15 }} /> {/* Menos espacio entre los íconos */}
+
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Entretenimiento') && styles.activeItem]}
+            onPress={() => router.push('../Entretenimiento/ViewEntretenimiento')}
+          >
+            <Entypo name="game-controller" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Entretenimiento</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Shopping') && styles.activeItem]}
+            onPress={() => router.push('../Shopping/ViewShopping')}
+          >
+            <Feather name="shopping-bag" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Compras</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.floatingButton, pathname.includes('MainMenu') && styles.activeFloatingButton]}
+          onPress={() => router.push('../MenuPrincipal/MainMenu')}
+        >
+          <AntDesign name="home" size={28} color="#FFD700" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -156,25 +208,71 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
   map: { width: '100%', height: '50%' },
   list: { padding: 10 },
-  item: {
+  lugarItem: {
     marginBottom: 15,
     backgroundColor: '#4CAF50',
     borderRadius: 8,
     padding: 10,
   },
-  title: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
-  desc: { fontSize: 14, color: '#fff' },
+  lugarTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+  lugarDesc: { fontSize: 14, color: '#fff' },
   button: {
     backgroundColor: '#FFEB3B',
     borderRadius: 5,
     paddingVertical: 10,
     marginTop: 10,
     alignItems: 'center',
-    width: '100%', // Esto hace que el botón ocupe todo el ancho disponible
+    width: '100%',
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
+  },
+  bottomMenuContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 70,
+    alignItems: 'center',
+  },
+  bottomMenu: {
+    flexDirection: 'row',
+    backgroundColor: '#4CAF50',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  menuItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 6,
+    borderRadius: 10,
+  },
+  activeItem: {
+    backgroundColor: '#388E3C',
+  },
+  menuText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  floatingButton: {
+    position: 'absolute',
+    top: -30,
+    backgroundColor: '#4CAF50',
+    borderRadius: 35,
+    padding: 14,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  activeFloatingButton: {
+    backgroundColor: '#388E3C',
   },
 });

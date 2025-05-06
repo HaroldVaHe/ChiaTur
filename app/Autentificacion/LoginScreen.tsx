@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { useAuth } from "@/Contexto/AuthContext"; // Asegúrate de que la ruta sea correcta
-import { auth, signInWithEmailAndPassword } from "@/utils/firebaseConfig";  // Importar desde firebaseConfig
-import { useRouter } from "expo-router";  // Importar useRouter para navegación
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ScrollView } from "react-native";
+import { useAuth } from "@/Contexto/AuthContext";
+import { useRouter } from "expo-router";
+
+// Usa una ruta relativa correcta según tu estructura de carpetas
+import LogoChia from "../../assets/images/LogoChia.jpg";
 
 const LoginScreen = () => {
-  const { login, loading } = useAuth(); // Utilizamos el contexto para acceder al login
+  const { login, loading } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const router = useRouter(); // Inicializamos el hook de navegación
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -19,7 +21,7 @@ const LoginScreen = () => {
 
     try {
       await login(email, password);
-      router.push("/MenuPrincipal/MainMenu");  // Redirige a la pantalla principal después de iniciar sesión
+      router.push("/MenuPrincipal/MainMenu");
     } catch (error: any) {
       console.error("Error al iniciar sesión", error);
       Alert.alert("Error", "Hubo un error al iniciar sesión. Verifique sus credenciales.");
@@ -27,86 +29,107 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Iniciar sesión</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Image source={LogoChia} style={styles.logo} resizeMode="contain" />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Correo electrónico"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
+        <Text style={styles.title}>Iniciar sesión</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Correo electrónico"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          placeholderTextColor="#999"
+        />
 
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading ? (
-          <Text style={styles.buttonText}>Cargando...</Text>
-        ) : (
-          <Text style={styles.buttonText}>Iniciar sesión</Text>
-        )}
-      </TouchableOpacity>
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholderTextColor="#999"
+        />
 
-      <TouchableOpacity onPress={() => router.push("/Autentificacion/RegisterScreen")}>
-        <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Cargando..." : "Iniciar sesión"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/Autentificacion/RegisterScreen")}>
+          <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
+export default LoginScreen;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
+  scrollContainer: {
+    flexGrow: 1,
     backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+  container: {
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+    alignItems: "center",
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
+    borderRadius: 75,
+    borderWidth: 2,
+    borderColor: "#4CAF50",
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 40,
-    color: "#4CAF50", // Verde
+    marginBottom: 30,
+    color: "#4CAF50",
   },
   input: {
+    width: "100%",
     height: 50,
-    borderColor: "#ccc",
+    borderColor: "#ddd",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 15,
     fontSize: 16,
+    backgroundColor: "#f9f9f9",
   },
   button: {
-    backgroundColor: "#4CAF50", // Verde
+    width: "100%",
+    backgroundColor: "#4CAF50",
     paddingVertical: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
+    marginTop: 10,
   },
   buttonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
   buttonDisabled: {
-    backgroundColor: "#80e0a7", // Verde más claro cuando está deshabilitado
+    backgroundColor: "#A5D6A7",
   },
   link: {
     marginTop: 20,
-    color: "#4CAF50", // Amarillo
+    color: "#4CAF50",
     textAlign: "center",
+    fontSize: 16,
   },
 });
-
-export default LoginScreen;

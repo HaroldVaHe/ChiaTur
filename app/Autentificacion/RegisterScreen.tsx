@@ -1,15 +1,27 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { useAuth } from "@/Contexto/AuthContext"; // Asegúrate de que la ruta sea correcta
-import { auth, createUserWithEmailAndPassword } from "@/utils/firebaseConfig";  // Importar desde firebaseConfig
-import { useRouter } from "expo-router";  // Importar useRouter para navegación
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Image,
+  ScrollView,
+} from "react-native";
+import { useAuth } from "@/Contexto/AuthContext";
+import { auth, createUserWithEmailAndPassword } from "@/utils/firebaseConfig";
+import { useRouter } from "expo-router";
+
+// Asegúrate de ajustar esta ruta según tu estructura real
+import LogoChia from "../../assets/images/LogoChia.jpg";
 
 const RegisterScreen = () => {
-  const { loading } = useAuth(); // Utilizamos el contexto para acceder al loading
+  const { loading } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const router = useRouter(); // Inicializamos el hook de navegación
+  const router = useRouter();
 
   const handleRegister = async () => {
     if (!email || !password) {
@@ -18,10 +30,9 @@ const RegisterScreen = () => {
     }
 
     try {
-      // Crear cuenta con email y contraseña
       await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Cuenta creada con éxito");
-      router.push("/MenuPrincipal/MainMenu");  // Redirige al login después de registrarse
+      router.push("/MenuPrincipal/MainMenu");
     } catch (error: any) {
       console.error("Error al crear la cuenta", error);
       Alert.alert("Error", "Hubo un error al crear la cuenta. Verifique sus datos.");
@@ -29,86 +40,107 @@ const RegisterScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Crear cuenta</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Image source={LogoChia} style={styles.logo} resizeMode="contain" />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Correo electrónico"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
+        <Text style={styles.title}>Crear cuenta</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Correo electrónico"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          placeholderTextColor="#999"
+        />
 
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleRegister}
-        disabled={loading}
-      >
-        {loading ? (
-          <Text style={styles.buttonText}>Cargando...</Text>
-        ) : (
-          <Text style={styles.buttonText}>Registrarse</Text>
-        )}
-      </TouchableOpacity>
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholderTextColor="#999"
+        />
 
-      <TouchableOpacity onPress={() => router.push("/Autentificacion/LoginScreen")}>
-        <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Cargando..." : "Registrarse"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/Autentificacion/LoginScreen")}>
+          <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
+export default RegisterScreen;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
+  scrollContainer: {
+    flexGrow: 1,
     backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+  container: {
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+    alignItems: "center",
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
+    borderRadius: 75,
+    borderWidth: 2,
+    borderColor: "#4CAF50",
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 40,
-    color: "#4CAF50", // Verde
+    marginBottom: 30,
+    color: "#4CAF50",
   },
   input: {
+    width: "100%",
     height: 50,
-    borderColor: "#ccc",
+    borderColor: "#ddd",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 15,
     fontSize: 16,
+    backgroundColor: "#f9f9f9",
   },
   button: {
-    backgroundColor: "#4CAF50", // Verde
+    width: "100%",
+    backgroundColor: "#4CAF50",
     paddingVertical: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
+    marginTop: 10,
   },
   buttonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
   buttonDisabled: {
-    backgroundColor: "#80e0a7", // Verde más claro cuando está deshabilitado
+    backgroundColor: "#A5D6A7",
   },
   link: {
     marginTop: 20,
-    color: "#4CAF50", // Amarillo
+    color: "#4CAF50",
     textAlign: "center",
+    fontSize: 16,
   },
 });
-
-export default RegisterScreen;

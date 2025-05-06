@@ -2,6 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Link } from 'expo-router';  // Importar Link de Expo Router
+import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
+import { useRouter, usePathname } from 'expo-router';
+import { LogBox } from 'react-native';
+
+// Ignorar el warning específico
+LogBox.ignoreLogs([
+  'Warning: Text strings must be rendered within a <Text> component.',
+]);
 
 interface Restaurante {
   id: string;
@@ -16,6 +24,8 @@ export default function ViewGastronomia() {
   const [loading, setLoading] = useState(true);
   const [selectedRestaurante, setSelectedRestaurante] = useState<Restaurante | null>(null); // Estado para el restaurante seleccionado
   const mapRef = useRef<MapView | null>(null); // Referencia al MapView
+  const router = useRouter();
+  const pathname = usePathname(); // Detecta ruta activa
 
   // Función para obtener la dirección usando OpenCage Geocoder
   const getDireccion = async (lat: number, lon: number) => {
@@ -154,6 +164,52 @@ export default function ViewGastronomia() {
           </View>
         )}
       />
+
+      {/* Menú inferior */}
+      <View style={styles.bottomMenuContainer}>
+        <View style={styles.bottomMenu}>
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Gastronomia') && styles.activeItem]}
+            onPress={() => router.push('../Gastronomia/ViewGastronomia')}
+          >
+            <FontAwesome5 name="utensils" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Gastronomía</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Cultura') && styles.activeItem]}
+            onPress={() => router.push('../Cultura/ViewCultura')}
+          >
+            <MaterialIcons name="museum" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Cultura</Text>
+          </TouchableOpacity>
+
+          <View style={{ width: 15 }} /> {/* Menos espacio entre los íconos */}
+
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Entretenimiento') && styles.activeItem]}
+            onPress={() => router.push('../Entretenimiento/ViewEntretenimiento')}
+          >
+            <Entypo name="game-controller" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Entretenimiento</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, pathname.includes('Shopping') && styles.activeItem]}
+            onPress={() => router.push('../Shopping/ViewShopping')}
+          >
+            <Feather name="shopping-bag" size={28} color="#FFD700" />
+            <Text style={styles.menuText}>Compras</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.floatingButton, pathname.includes('MainMenu') && styles.activeFloatingButton]}
+          onPress={() => router.push('../MenuPrincipal/MainMenu')}
+        >
+          <AntDesign name="home" size={28} color="#FFD700" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -182,5 +238,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',  // Color del texto en el botón
+  },
+  bottomMenuContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 70,
+    alignItems: 'center',
+  },
+  bottomMenu: {
+    flexDirection: 'row',
+    backgroundColor: '#4CAF50',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  menuItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 6,
+    borderRadius: 10,
+  },
+  activeItem: {
+    backgroundColor: '#388E3C',
+  },
+  menuText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  floatingButton: {
+    position: 'absolute',
+    top: -30,
+    backgroundColor: '#4CAF50',
+    borderRadius: 35,
+    padding: 14,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  activeFloatingButton: {
+    backgroundColor: '#388E3C',
   },
 });
