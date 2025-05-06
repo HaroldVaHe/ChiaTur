@@ -4,7 +4,7 @@ import { useAuth } from "@/Contexto/AuthContext";
 import { useRouter } from "expo-router";
 
 // Usa una ruta relativa correcta según tu estructura de carpetas
-import LogoChia from "../../assets/images/LogoChia.jpg";
+import LogoChia from "@/assets/images/LogoChia.jpg";
 
 const LoginScreen = () => {
   const { login, loading } = useAuth();
@@ -77,13 +77,16 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "transparent", // Fondo del ScrollView
     justifyContent: "center",
   },
   container: {
     paddingHorizontal: 24,
     paddingVertical: 40,
     alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "transparent",
   },
   logo: {
     width: 150,

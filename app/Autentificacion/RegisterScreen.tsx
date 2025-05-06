@@ -14,7 +14,7 @@ import { auth, createUserWithEmailAndPassword } from "@/utils/firebaseConfig";
 import { useRouter } from "expo-router";
 
 // Asegúrate de ajustar esta ruta según tu estructura real
-import LogoChia from "../../assets/images/LogoChia.jpg";
+import LogoChia from "@/assets/images/LogoChia.jpg";
 
 const RegisterScreen = () => {
   const { loading } = useAuth();
@@ -88,13 +88,15 @@ export default RegisterScreen;
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: "#fff",
     justifyContent: "center",
   },
   container: {
     paddingHorizontal: 24,
     paddingVertical: 40,
     alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+
   },
   logo: {
     width: 150,

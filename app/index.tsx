@@ -25,7 +25,12 @@ export default function App() {
   return (
     // Envuelve el contenido dentro de GestureHandlerRootView
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View onLayout={onLayoutRootView} style={{ flex: 1 }}>
+      <View
+        onLayout={onLayoutRootView}
+        style={{
+          flex: 1,
+        }}
+      >
         <ChiaTur />
       </View>
     </GestureHandlerRootView>

@@ -153,16 +153,15 @@ export default function ViewEntretenimiento() {
               <Text style={styles.lugarDesc}>{item.direccion}</Text>
             </TouchableOpacity>
 
-            <Link
-              href={{
-                pathname: '/Entretenimiento/ChatEntretenimiento',
-                params: { lugar: JSON.stringify(item) },
-              }}
-            >
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Ver más</Text>
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity
+  style={styles.button}
+  onPress={() => router.push({
+    pathname: '/Entretenimiento/ChatEntretenimiento',
+    params: { restaurante: JSON.stringify(item) },
+  })}
+>
+  <Text style={styles.buttonText}>Ver más</Text>
+</TouchableOpacity>
           </View>
         )}
       />
@@ -217,7 +216,7 @@ export default function ViewEntretenimiento() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   map: { width: '100%', height: '50%' },
   list: { padding: 10 },
   lugarItem: {

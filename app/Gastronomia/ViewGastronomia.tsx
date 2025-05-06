@@ -151,16 +151,15 @@ export default function ViewGastronomia() {
             </TouchableOpacity>
 
             {/* Botón Ver más debajo de cada restaurante */}
-            <Link
-              href={{
-                pathname: '/Gastronomia/ChatGastronomia',  // Ruta a la vista ChatGastronomia
-                params: { restaurante: JSON.stringify(item) },  // Serializar el objeto del restaurante
-              }}
-            >
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Ver más</Text>
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity
+  style={styles.button}
+  onPress={() => router.push({
+    pathname: '/Gastronomia/ChatGastronomia',
+    params: { restaurante: JSON.stringify(item) },
+  })}
+>
+  <Text style={styles.buttonText}>Ver más</Text>
+</TouchableOpacity>
           </View>
         )}
       />
@@ -215,7 +214,7 @@ export default function ViewGastronomia() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   map: { width: '100%', height: '50%' },
   list: { padding: 10 },
   restauranteItem: {
@@ -231,6 +230,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingVertical: 10,
     marginTop: 10,
+    
     alignItems: 'center',
     width: '100%', // Esto hace que el botón ocupe todo el ancho disponible
   },
