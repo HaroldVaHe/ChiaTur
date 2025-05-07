@@ -1,9 +1,10 @@
 import { Stack } from "expo-router";
 import { AuthProvider } from "@/Contexto/AuthContext";
+
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
-import { Platform, StyleSheet, View, SafeAreaView } from "react-native";
+import { Platform } from "react-native";
 import { useEffect, useRef, useState } from "react";
 
 Notifications.setNotificationHandler({
@@ -37,7 +38,6 @@ async function registerForPushNotificationsAsync() {
       alert('Failed to get push token for push notification!');
       return;
     }
-
     try {
       const projectId =
         Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
@@ -45,7 +45,9 @@ async function registerForPushNotificationsAsync() {
         throw new Error('Project ID not found');
       }
       token = (
-        await Notifications.getExpoPushTokenAsync({ projectId })
+        await Notifications.getExpoPushTokenAsync({
+          projectId,
+        })
       ).data;
       console.log(token);
     } catch (e) {
@@ -61,7 +63,9 @@ async function registerForPushNotificationsAsync() {
 export default function RootLayout() {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined
+  );
   const notificationListener = useRef<Notifications.EventSubscription>();
   const responseListener = useRef<Notifications.EventSubscription>();
 
@@ -86,38 +90,18 @@ export default function RootLayout() {
     });
 
     return () => {
-      notificationListener.current &&
+      if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
-      responseListener.current &&
+      }
+      if (responseListener.current) {
         Notifications.removeNotificationSubscription(responseListener.current);
+      }
     };
   }, []);
 
   return (
-    <AuthProvider expoPushToken={expoPushToken}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <Stack
-            screenOptions={{
-              contentStyle: {
-                backgroundColor: "#0f0f0e",
-              },
-            }}
-          />
-
-        </View>
-      </SafeAreaView>
+    <AuthProvider>
+      <Stack screenOptions={{ headerShown: false }} />
     </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#0f0f0e",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#0f0f0e",
-  },
-});
