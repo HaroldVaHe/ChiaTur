@@ -126,7 +126,7 @@ export default function ViewCultura() {
       stars.push(
         <FontAwesome5
           key={i}
-          name={i <= rating ? "star" : "star-o"}
+          name={i <= rating ? "star" : "star"}
           size={16}
           color="#FFD700"
           style={{ marginRight: 2 }}
@@ -396,13 +396,13 @@ export default function ViewCultura() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: 'white' 
+    backgroundColor: 'transparent', 
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
   },
   loadingText: {
     marginTop: 10,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   bottomSheet: {
-    backgroundColor: 'white',
+    backgroundColor: '#F1F2EE',
     width: '100%',
     position: 'absolute',
     top: '50%',

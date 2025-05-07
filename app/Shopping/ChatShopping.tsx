@@ -131,7 +131,7 @@ const ChatTienda = () => {
 export default ChatTienda;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF', padding: 10 },
+  container: { flex: 1, backgroundColor: 'transparent', padding: 10 },
   chat: { paddingVertical: 10 },
   messageContainer: {
     marginVertical: 5,

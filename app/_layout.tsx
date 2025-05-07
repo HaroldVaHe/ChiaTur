@@ -4,7 +4,7 @@ import { AuthProvider } from "@/Contexto/AuthContext";
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
-import { Platform } from "react-native";
+import { Platform, SafeAreaView, View, StyleSheet } from "react-native";
 import { useEffect, useRef, useState } from "react";
 
 Notifications.setNotificationHandler({
@@ -76,6 +76,7 @@ export default function RootLayout() {
         setExpoPushToken(token);
       }
     });
+    registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
 
     if (Platform.OS === 'android') {
       Notifications.getNotificationChannelsAsync().then(value => setChannels(value ?? []));
@@ -90,18 +91,40 @@ export default function RootLayout() {
     });
 
     return () => {
-      if (notificationListener.current) {
+      notificationListener.current &&
+
         Notifications.removeNotificationSubscription(notificationListener.current);
-      }
-      if (responseListener.current) {
+        responseListener.current &&
         Notifications.removeNotificationSubscription(responseListener.current);
-      }
+      
     };
   }, []);
 
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+    <AuthProvider expoPushToken={expoPushToken}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Stack
+            screenOptions={{
+              contentStyle: {
+                backgroundColor: "#F1F2EE",
+              },
+            }}
+          />
+
+        </View>
+      </SafeAreaView>
     </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#0f0f0e",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#0f0f0e",
+  },
+});
