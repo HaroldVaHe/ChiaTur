@@ -2,9 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Dimensions, LogBox, Image } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Link, useRouter, usePathname } from 'expo-router';
-import { FontAwesome5 } from 'react-native-vector-icons';
-
-import { MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
