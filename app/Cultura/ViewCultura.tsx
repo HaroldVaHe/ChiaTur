@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Dimensions, LogBox } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Dimensions, LogBox, Image } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Link, useRouter, usePathname } from 'expo-router';
 import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
@@ -19,7 +19,7 @@ LogBox.ignoreLogs([
 ]);
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-  const MAX_TRANSLATE_Y = -SCREEN_HEIGHT * 0.5;
+const MAX_TRANSLATE_Y = -SCREEN_HEIGHT * 0.6; // Aumentamos el valor para que la pantalla se expanda más
 
 interface Cultura {
   id: string;
@@ -27,6 +27,7 @@ interface Cultura {
   latitud: number;
   longitud: number;
   direccion: string;
+  estrellas?: number;
 }
 
 export default function ViewCultura() {
@@ -91,6 +92,7 @@ export default function ViewCultura() {
             latitud: el.lat,
             longitud: el.lon,
             direccion,
+            estrellas: 4, // Todas comienzan con 4 estrellas por defecto
           };
         }));
 
@@ -115,6 +117,23 @@ export default function ViewCultura() {
         longitudeDelta: 0.02,
       });
     }
+  };
+
+  // Componente para renderizar estrellas
+  const StarRating = ({ rating }: { rating: number }) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <FontAwesome5
+          key={i}
+          name={i <= rating ? "star" : "star-o"}
+          size={16}
+          color="#FFD700"
+          style={{ marginRight: 2 }}
+        />
+      );
+    }
+    return <View style={{ flexDirection: 'row', marginTop: 5 }}>{stars}</View>;
   };
 
   const updateIsExpanded = (value: boolean) => {
@@ -183,6 +202,8 @@ export default function ViewCultura() {
   const rBottomSheetStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateY: translateY.value }],
+      // Aseguramos que cuando está expandido, el sheet ocupe todo el espacio disponible
+      height: SCREEN_HEIGHT + 100, // Siempre aseguramos espacio suficiente
     };
   });
 
@@ -252,54 +273,76 @@ export default function ViewCultura() {
             <View style={styles.line} />
           </View>
         </GestureDetector>
-        
-        <TouchableOpacity 
-          style={styles.sheetButton}
-          onPress={toggleSheet}
-          activeOpacity={0.7}
-        >
-          <AntDesign 
-            name={isExpanded ? "down" : "up"} 
-            size={24} 
-            color="#4CAF50" 
-          />
-          <Text style={styles.sheetButtonText}>
-            {isExpanded ? "Ver menos" : "Ver más lugares"}
-          </Text>
-        </TouchableOpacity>
 
         <View style={styles.listContainer}>
           <FlatList
             data={lugares}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[
+              styles.list,
+              // Padding extra para asegurar que haya espacio para el botón flotante inferior
+              { paddingBottom: isExpanded ? 120 : 80 }
+            ]}
             scrollEnabled={true}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={true}
             onEndReachedThreshold={0.1}
+            alwaysBounceVertical={true}
             renderItem={({ item }) => (
               <View style={styles.item}>
                 <TouchableOpacity onPress={() => handleLugarPress(item)}>
                   <Text style={styles.title}>{item.nombre}</Text>
-                  <Text style={styles.desc}>{item.direccion}</Text>
+                  <Text style={styles.desc}><Text style={styles.labelText}>Dirección:</Text> {item.direccion}</Text>
+                  <StarRating rating={item.estrellas || 4} />
                 </TouchableOpacity>
 
-                <Link
-                  href={{
-                    pathname: '../Cultura/ChatCultura',
-                    params: { lugar: JSON.stringify(item) },
-                  }}
-                  asChild
-                >
-                  <TouchableOpacity style={styles.button}>
-                    <Text style={styles.buttonText}>Ver más</Text>
+                <View style={styles.buttonContainer}>
+                  <Link
+                    href={{
+                      pathname: '../Cultura/ChatCultura',
+                      params: { lugar: JSON.stringify(item) },
+                    }}
+                    asChild
+                  >
+                    <TouchableOpacity style={styles.squareButton}>
+                      <FontAwesome5 name="robot" size={24} color="#000" />
+                      <Text style={styles.squareButtonText}>Preguntar</Text>
+                    </TouchableOpacity>
+                  </Link>
+
+                  <TouchableOpacity style={styles.squareButton}>
+                    <FontAwesome5 name="star" size={24} color="#000" />
+                    <Text style={styles.squareButtonText}>Calificar</Text>
                   </TouchableOpacity>
-                </Link>
+                </View>
               </View>
             )}
           />
         </View>
       </Animated.View>
+      
+      {/* Botones flotantes reposicionados al lado izquierdo con color amarillo */}
+      {isExpanded && (
+        <TouchableOpacity 
+          style={styles.floatingCollapseButton}
+          onPress={toggleSheet}
+          activeOpacity={0.7}
+        >
+          <AntDesign name="down" size={20} color="black" />
+          <Text style={styles.floatingButtonText}>Ver menos</Text>
+        </TouchableOpacity>
+      )}
+
+      {!isExpanded && (
+        <TouchableOpacity 
+          style={styles.floatingExpandButton}
+          onPress={toggleSheet}
+          activeOpacity={0.7}
+        >
+          <AntDesign name="up" size={20} color="black" />
+          <Text style={styles.floatingButtonText}>Ver más</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Menú inferior */}
       <View style={styles.bottomMenuContainer}>
@@ -381,7 +424,6 @@ const styles = StyleSheet.create({
     width: '100%',
     position: 'absolute',
     top: '50%',
-    height: SCREEN_HEIGHT * 0.7, // Altura ajustada
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     zIndex: 2,
@@ -402,21 +444,45 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     borderRadius: 2,
   },
-  sheetButton: {
+  floatingExpandButton: {
+    position: 'absolute',
+    left: 20, // Cambiado de right a left
+    bottom: 90,
+    backgroundColor: '#FFEB3B', // Cambiado a amarillo
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-    marginBottom: 5,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    marginHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 25,
+    zIndex: 999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  sheetButtonText: {
-    fontSize: 16,
+  floatingCollapseButton: {
+    position: 'absolute',
+    left: 20, // Cambiado de right a left
+    bottom: 90,
+    backgroundColor: '#FFEB3B', // Cambiado a amarillo
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 25,
+    zIndex: 999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  floatingButtonText: {
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#4CAF50',
-    marginLeft: 8,
+    color: 'black', // Cambiado a negro para mejor contraste con el fondo amarillo
+    marginLeft: 6,
   },
   sheetHeader: {
     width: '100%',
@@ -427,7 +493,6 @@ const styles = StyleSheet.create({
   },
   list: { 
     padding: 10,
-    paddingBottom: 80, // Ajustado para eliminar el espacio en blanco
   },
   item: {
     marginBottom: 15,
@@ -442,20 +507,31 @@ const styles = StyleSheet.create({
   },
   desc: { 
     fontSize: 14, 
-    color: '#fff' 
+    color: '#fff',
+    marginTop: 5,
   },
-  button: {
-    backgroundColor: '#FFEB3B',
-    borderRadius: 5,
-    paddingVertical: 10,
+  labelText: {
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 10,
-    alignItems: 'center',
-    width: '100%',
   },
-  buttonText: {
-    fontSize: 16,
+  squareButton: {
+    backgroundColor: '#FFEB3B',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+    width: '48%', // Para que quepan dos botones con espacio entre ellos
+    justifyContent: 'center',
+    flexDirection: 'column',
+  },
+  squareButtonText: {
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#000',
+    marginTop: 4,
   },
   bottomMenuContainer: {
     position: 'absolute',
