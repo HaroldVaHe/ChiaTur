@@ -30,6 +30,12 @@ router.push({
   params: { email }
 });
       Alert.alert("Cuenta creada con éxito");
+      const credenciales = await register(email, password);
+router.push({
+  pathname: "/Autentificacion/SeleccionIntereses",
+  params: { email }
+});
+      Alert.alert("Cuenta creada con éxito");
       
     } catch (error: any) {
       console.error("Error al crear la cuenta", error);
