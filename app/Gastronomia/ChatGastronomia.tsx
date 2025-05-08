@@ -132,7 +132,7 @@ const ChatGastronomia = () => {
 export default ChatGastronomia;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF', padding: 10 },
+  container: { flex: 1, backgroundColor: 'trasparent', padding: 10 },
   chat: { paddingVertical: 10 },
   messageContainer: {
     marginVertical: 5,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   sendButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4CAF50',
     borderRadius: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,

@@ -1,13 +1,8 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-<<<<<<< Updated upstream
-import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "@/utils/firebaseConfig"; // Asegúrate de que la ruta sea correcta
-=======
 import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, UserCredential } from "firebase/auth";
 import { auth, db } from "@/utils/firebaseConfig"; // Asegúrate de que la ruta sea correcta
 import { setDoc, doc, getDoc } from "firebase/firestore"; // Importar funciones necesarias de Firestore
->>>>>>> Stashed changes
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +15,13 @@ interface AuthContextType {
 // Creamos el contexto de autenticación
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({
+  children,
+  expoPushToken,
+}: {
+  children: React.ReactNode;
+  expoPushToken: string;
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,17 +35,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe(); // Limpiar el suscriptor cuando el componente se desmonte
   }, []);
 
-  // Función de login
-  const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-  };
+// Función de login
+const login = async (email: string, password: string) => {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
+  const uid = user.uid;
 
-<<<<<<< Updated upstream
-  // Función de registro
-  const register = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password);
-  };
-=======
   if (expoPushToken) {
     await setDoc(doc(db, "users", uid), {
       userId: uid,
@@ -56,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   await syncPushTokenIfNeeded(uid); // Sincronizar el token si es necesario
 };
 // Función de registro
-const register = async (email: string, password: string): Promise<UserCredential> => {
+const register = async (email: string, password: string):Promise<UserCredential> => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
   const uid = user.uid;
@@ -73,12 +69,26 @@ const register = async (email: string, password: string): Promise<UserCredential
   return userCredential; // 👈 Esta línea es clave
 
 };
->>>>>>> Stashed changes
 
   // Función de logout
   const logout = async () => {
     await signOut(auth);
   };
+  const syncPushTokenIfNeeded = async (uid: string) => {
+    if (!expoPushToken) return;
+  
+    const userDocRef = doc(db, "users", uid);
+    const userSnapshot = await getDoc(userDocRef);
+  
+    const currentTokenInDB = userSnapshot.exists() ? userSnapshot.data().expoPushToken : null;
+  
+    if (currentTokenInDB !== expoPushToken) {
+      await setDoc(userDocRef, {
+        expoPushToken,
+      }, { merge: true });
+    }
+  };
+  
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>

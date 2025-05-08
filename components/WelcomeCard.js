@@ -10,12 +10,12 @@ const WelcomeCard = () => {
     <View style={styles.container}>
       {/* Imagen de perfil flotando */}
       <Image
-        source={require('@/assets/images/DiosaLunaChia.jpg')}
-        style={styles.profileImage}
+            source={require('@/assets/images/LogoChia.jpg')}
+            style={styles.profileImage}
       />
 
       {/* Título */}
-      <Text style={{ fontFamily: 'FigmaHands', fontSize: 32, color: 'white' }}>
+      <Text style={[{ fontFamily: 'FigmaHands', fontSize: 32, color: 'white' }, styles.title]}>
         Chía
         <Text style={{ fontWeight: 'bold' }}>Tur</Text>
       </Text>
@@ -64,6 +64,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -30,
     zIndex: 2,
+    borderWidth: 3, // Contorno blanco
+    borderColor: 'white', // Color blanco para el contorno
+  },
+  title: {
+    marginTop: 10, // Mover el texto más abajo
   },
   subtitle: {
     fontSize: 16,
