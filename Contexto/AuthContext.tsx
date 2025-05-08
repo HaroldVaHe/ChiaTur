@@ -1,6 +1,6 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, UserCredential } from "firebase/auth";
 import { auth, db } from "@/utils/firebaseConfig"; // Asegúrate de que la ruta sea correcta
 import { setDoc, doc, getDoc } from "firebase/firestore"; // Importar funciones necesarias de Firestore
 
@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
 }
 
@@ -52,7 +52,7 @@ const login = async (email: string, password: string) => {
   await syncPushTokenIfNeeded(uid); // Sincronizar el token si es necesario
 };
 // Función de registro
-const register = async (email: string, password: string) => {
+const register = async (email: string, password: string):Promise<UserCredential> => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
   const uid = user.uid;
@@ -66,6 +66,8 @@ const register = async (email: string, password: string) => {
     });
   }
   await syncPushTokenIfNeeded(uid); // Sincronizar el token si es necesario
+  return userCredential; // 👈 Esta línea es clave
+
 };
 
   // Función de logout

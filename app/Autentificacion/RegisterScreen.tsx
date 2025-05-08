@@ -17,7 +17,7 @@ import { useRouter } from "expo-router";
 import LogoChia from "@/assets/images/LogoChia.jpg";
 
 const RegisterScreen = () => {
-  const { loading } = useAuth();
+  const { register, loading } = useAuth(); // Asegúrate de que register devuelva credenciales con user
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
@@ -30,9 +30,15 @@ const RegisterScreen = () => {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const credenciales = await register(email, password);
+      const uid = credenciales.user.uid; // obtener el uid del usuario
+
+router.push({
+  pathname: "/Autentificacion/SeleccionIntereses",
+  params: { uid }
+});
       Alert.alert("Cuenta creada con éxito");
-      router.push("/MenuPrincipal/MainMenu");
+      
     } catch (error: any) {
       console.error("Error al crear la cuenta", error);
       Alert.alert("Error", "Hubo un error al crear la cuenta. Verifique sus datos.");
@@ -143,6 +149,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: "#4CAF50",
     textAlign: "center",
-    fontSize: 16,
-  },
+    fontSize: 16,
+  },
 });
