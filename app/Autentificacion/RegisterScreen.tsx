@@ -6,6 +6,8 @@ import { useRouter } from "expo-router";  // Importar useRouter para navegación
 
 const RegisterScreen = () => {
   const { loading } = useAuth(); // Utilizamos el contexto para acceder al loading
+=======
+  const { register, loading } = useAuth();  // Usar la función register
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
@@ -22,6 +24,13 @@ const RegisterScreen = () => {
       await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Cuenta creada con éxito");
       router.push("/MenuPrincipal/MainMenu");  // Redirige al login después de registrarse
+      const credenciales = await register(email, password);
+router.push({
+  pathname: "/Autentificacion/SeleccionIntereses",
+  params: { email }
+});
+      Alert.alert("Cuenta creada con éxito");
+      
     } catch (error: any) {
       console.error("Error al crear la cuenta", error);
       Alert.alert("Error", "Hubo un error al crear la cuenta. Verifique sus datos.");

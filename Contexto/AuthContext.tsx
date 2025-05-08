@@ -1,13 +1,19 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
+<<<<<<< Updated upstream
 import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "@/utils/firebaseConfig"; // Asegúrate de que la ruta sea correcta
+=======
+import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, UserCredential } from "firebase/auth";
+import { auth, db } from "@/utils/firebaseConfig"; // Asegúrate de que la ruta sea correcta
+import { setDoc, doc, getDoc } from "firebase/firestore"; // Importar funciones necesarias de Firestore
+>>>>>>> Stashed changes
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
 }
 
@@ -33,10 +39,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
+<<<<<<< Updated upstream
   // Función de registro
   const register = async (email: string, password: string) => {
     await createUserWithEmailAndPassword(auth, email, password);
   };
+=======
+  if (expoPushToken) {
+    await setDoc(doc(db, "users", uid), {
+      userId: uid,
+      name: email.split("@")[0],
+      email: email,
+      expoPushToken,
+    }, { merge: true }); // merge:true para no borrar datos previos
+  }
+  await syncPushTokenIfNeeded(uid); // Sincronizar el token si es necesario
+};
+// Función de registro
+const register = async (email: string, password: string): Promise<UserCredential> => {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
+  const uid = user.uid;
+
+  if (expoPushToken) {
+    await setDoc(doc(db, "users", uid), {
+      userId: uid,
+      name: email.split("@")[0],
+      email: email,
+      expoPushToken,
+    });
+  }
+  await syncPushTokenIfNeeded(uid); // Sincronizar el token si es necesario
+  return userCredential; // 👈 Esta línea es clave
+
+};
+>>>>>>> Stashed changes
 
   // Función de logout
   const logout = async () => {
