@@ -293,7 +293,7 @@ export default function ViewCultura() {
                 <TouchableOpacity onPress={() => handleLugarPress(item)}>
                   <Text style={styles.title}>{item.nombre}</Text>
                   <Text style={styles.desc}><Text style={styles.labelText}>Dirección:</Text> {item.direccion}</Text>
-                  <StarRating rating={item.estrellas || 4} />
+                  {/* <StarRating rating={item.estrellas || 4} /> */}
                 </TouchableOpacity>
 
                 <View style={styles.buttonContainer}>
@@ -310,10 +310,10 @@ export default function ViewCultura() {
                     </TouchableOpacity>
                   </Link>
 
-                  <TouchableOpacity style={styles.squareButton}>
+                  {/* <TouchableOpacity style={styles.squareButton}>
                     <FontAwesome5 name="star" size={24} color="#000" />
                     <Text style={styles.squareButtonText}>Calificar</Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                 </View>
               </View>
             )}
@@ -518,12 +518,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
   },
-  squareButton: {
+ squareButton: {
     backgroundColor: '#FFEB3B',
     borderRadius: 8,
     padding: 10,
+    marginBottom: 2,
     alignItems: 'center',
-    width: '48%', // Para que quepan dos botones con espacio entre ellos
+    width: '100%',
     justifyContent: 'center',
     flexDirection: 'column',
   },

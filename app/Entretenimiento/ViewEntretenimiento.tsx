@@ -281,7 +281,7 @@ export default function ViewEntretenimiento() {
                 <TouchableOpacity onPress={() => handleLugarPress(item)}>
                   <Text style={styles.title}>{item.nombre}</Text>
                   <Text style={styles.desc}><Text style={styles.labelText}>Dirección:</Text> {item.direccion}</Text>
-                  <StarRating rating={item.estrellas || 4} />
+                  {/* <StarRating rating={item.estrellas || 4} /> */}
                 </TouchableOpacity>
 
                 <View style={styles.buttonContainer}>
@@ -298,10 +298,10 @@ export default function ViewEntretenimiento() {
                     </TouchableOpacity>
                   </Link>
 
-                  <TouchableOpacity style={styles.squareButton}>
-                    <FontAwesome5 name="star" size={24} color="#000" />
-                    <Text style={styles.squareButtonText}>Calificar</Text>
-                  </TouchableOpacity>
+                    {/* <TouchableOpacity style={styles.squareButton}>
+                      <FontAwesome5 name="star" size={24} color="#000" />
+                      <Text style={styles.squareButtonText}>Calificar</Text>
+                    </TouchableOpacity> */}
                 </View>
               </View>
             )}
@@ -510,8 +510,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFEB3B',
     borderRadius: 8,
     padding: 10,
+    marginBottom: 2,
     alignItems: 'center',
-    width: '48%',
+    width: '100%',
     justifyContent: 'center',
     flexDirection: 'column',
   },

@@ -126,22 +126,22 @@ export default function ViewGastronomia() {
 
 
 
-  const handleBarCodeScanned = (data: { data: string | string[]; }) => {
-     const restauranteNombre = selectedRestaurante?.nombre || '';
-    setScanned(true); // Detener el escaneo una vez que se detecta un QR
+  // const handleBarCodeScanned = (data: { data: string | string[]; }) => {
+  //    const restauranteNombre = selectedRestaurante?.nombre || '';
+  //   setScanned(true); // Detener el escaneo una vez que se detecta un QR
 
-    if (data.data.includes(restauranteNombre)) {
-      setCameraVisible(false);
-      Alert.alert("✅ Calificación aprobada", `Puedes calificar el restaurante: ${restauranteNombre}.`);
-      // Aquí puedes añadir la lógica para permitir la calificación del restaurante
-    } else {
-      Alert.alert(
-        "❌ Código inválido",
-        `El QR trajo la siguiente información: ${data}\nDebe coincidir con el nombre del restaurante: ${restauranteNombre}`
-      );
-      setCameraVisible(false);
-    }
-  };
+  //   if (data.data.includes(restauranteNombre)) {
+  //     setCameraVisible(false);
+  //     Alert.alert("✅ Calificación aprobada", `Puedes calificar el restaurante: ${restauranteNombre}.`);
+  //     // Aquí puedes añadir la lógica para permitir la calificación del restaurante
+  //   } else {
+  //     Alert.alert(
+  //       "❌ Código inválido",
+  //       `El QR trajo la siguiente información: ${data}\nDebe coincidir con el nombre del restaurante: ${restauranteNombre}`
+  //     );
+  //     setCameraVisible(false);
+  //   }
+  // };
 
 
 
@@ -311,7 +311,7 @@ export default function ViewGastronomia() {
                 <TouchableOpacity onPress={() => handleRestaurantePress(item)}>
                   <Text style={styles.title}>{item.nombre}</Text>
                   <Text style={styles.desc}><Text style={styles.labelText}>Dirección:</Text> {item.direccion}</Text>
-                  <StarRating rating={item.estrellas || 4} />
+                  {/* <StarRating rating={item.estrellas || 4} /> */}
                 </TouchableOpacity>
 
                 <View style={styles.buttonContainer}>
@@ -329,7 +329,7 @@ export default function ViewGastronomia() {
                   </Link>
 
 
-                  <TouchableOpacity
+                  {/* <TouchableOpacity
                     style={styles.squareButton}
 
 
@@ -341,7 +341,7 @@ export default function ViewGastronomia() {
                   >
                     <FontAwesome5 name="star" size={24} color="#000" />
                     <Text style={styles.squareButtonText}>Calificar</Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
 
 
 
@@ -375,7 +375,7 @@ export default function ViewGastronomia() {
       )}
 
 
-      {/* Modal con cámara */}
+      {/* Modal con cámara
       <Modal visible={cameraVisible} animationType="slide">
         <CameraView
           style={{ flex: 1 }}
@@ -399,7 +399,7 @@ onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             </TouchableOpacity>
           </View>
         </CameraView>
-      </Modal>
+      </Modal> */}
 
       {/* Menú inferior */}
       <View style={styles.bottomMenuContainer}>
@@ -576,12 +576,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
   },
-  squareButton: {
+squareButton: {
     backgroundColor: '#FFEB3B',
     borderRadius: 8,
     padding: 10,
+    marginBottom: 2,
     alignItems: 'center',
-    width: '48%',
+    width: '100%',
     justifyContent: 'center',
     flexDirection: 'column',
   },
