@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Modal, Alert } from 'react-native';
 import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';import { LogBox } from 'react-native';
+import { CameraView, Camera } from "expo-camera"; // Importar componentes de cámara
 
 LogBox.ignoreLogs([
   'Warning: Text strings must be rendered within a <Text> component.',
@@ -10,12 +11,49 @@ LogBox.ignoreLogs([
 export default function MainMenu() {
   const router = useRouter();
   const pathname = usePathname(); // Detecta ruta activa
+    const [hasPermission, setHasPermission] = useState<boolean | null>(null); // Estado para permisos de cámara
+    const [cameraVisible, setCameraVisible] = useState(false); // Estado para visibilidad de la cámara
+    const [scanned, setScanned] = useState(false);
+    
+    
+    const Validos = [
+    { nombre: "Valvanera", ruta: "../QRs/Valvanera" },
+    { nombre: "ParqueOspina", ruta: "../QRs/ParqueOspina" },
+    { nombre: "MiradorYerbabuena", ruta: "../QRs/MiradorYerbabuena" },
+  { nombre: "CatedralSantaCruz", ruta: "../QRs/CatedralSantaCruz" },
+  { nombre: "CasaCultura", ruta: "../QRs/CasaCultura" },
+  { nombre: "ParquePuenteComun", ruta: "../QRs/ParquePuenteComun" },
+];
+const handleBarCodeScanned = ({ data }: { data: string }) => {
+  setScanned(true);
+  const lugar = Validos.find(r => data.includes(r.nombre));
+
+  if (lugar) {
+    Alert.alert("✅ Calificación aprobada", `Informacion sobre: ${lugar.nombre}`);
+    setCameraVisible(false);
+    router.push(lugar.ruta as any);
+  } else {
+    Alert.alert("❌ Código inválido", `El QR trajo la siguiente información: ${data}\nNo coincide con ningún lugar de interes registrado.`);
+    setCameraVisible(false);
+  }
+};
+
 
   return (
     <View style={styles.container}>
       {/* Contenido principal scrollable */}
       <ScrollView style={styles.topSection}>
         <View style={styles.header}>
+       <TouchableOpacity
+  style={styles.qrButton}
+  onPress={() => {
+    setCameraVisible(true);
+    setScanned(false);
+  }}
+>
+  <FontAwesome5 name="qrcode" size={24} color="#fff" />
+  <Text style={styles.qrButtonText}>QR</Text>
+</TouchableOpacity>
           <Image
             source={require('@/assets/images/LogoChia.jpg')}
             style={styles.logo}
@@ -40,11 +78,35 @@ export default function MainMenu() {
         <Text style={styles.factText}>
           4. En Chía se realizan eventos como el Festival de la Luna y la Fiesta de la Virgen del Carmen, que atraen a turistas y locales.
         </Text>
-        <Text style={styles.factText}>
+        <Text style={styles.finalfactText}>
           5. Muy cerca encontrarás sitios como la Laguna de Guatavita y el Parque Jaime Duque, ideales para el turismo en familia.
         </Text>
       </ScrollView>
-
+ {/* Modal con cámara */}
+      <Modal visible={cameraVisible} animationType="slide">
+        <CameraView
+          style={{ flex: 1 }}
+onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+        >
+          <View style={{ flex: 1, justifyContent: "flex-end", padding: 20 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#000000AA",
+                padding: 10,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                setCameraVisible(false);
+                setScanned(false); // Resetear el estado de escaneo al cerrar la cámara
+              }}
+            >
+              <Text style={{ color: "#FFF" }}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </CameraView>
+      </Modal>
       {/* Menú inferior */}
       <View style={styles.bottomMenuContainer}>
         <View style={styles.bottomMenu}>
@@ -104,7 +166,7 @@ const styles = StyleSheet.create({
   topSection: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    marginBottom: 90,
+    marginBottom: 70,
   },
   header: {
     alignItems: 'center',
@@ -132,6 +194,12 @@ const styles = StyleSheet.create({
     color: '#555',
     lineHeight: 22,
     marginBottom: 8,
+  },
+  finalfactText: {
+    fontSize: 16,
+    color: '#555',
+    lineHeight: 22,
+    marginBottom: 50,
   },
   bottomMenuContainer: {
     position: 'absolute',
@@ -179,4 +247,20 @@ const styles = StyleSheet.create({
   activeFloatingButton: {
     backgroundColor: '#388E3C',
   },
+  qrButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#4CAF50',
+  padding: 10,
+  borderRadius: 8,
+  alignSelf: 'flex-end',
+  marginVertical: 10,
+},
+qrButtonText: {
+  color: '#fff',
+  marginLeft: 8,
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
 });
