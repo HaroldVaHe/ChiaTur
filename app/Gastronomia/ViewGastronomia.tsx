@@ -1,22 +1,19 @@
+
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Dimensions, LogBox, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Dimensions, LogBox, Image, Modal, Alert } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Link, useRouter, usePathname } from 'expo-router';
 import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  interpolate,
-  runOnJS
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, interpolate, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { CameraView, Camera } from "expo-camera"; // Importar componentes de cámara
 
 // Ignorar advertencias específicas
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
   'VirtualizedLists should never be nested'
 ]);
+
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MAX_TRANSLATE_Y = -SCREEN_HEIGHT * 0.6;
@@ -31,12 +28,17 @@ interface Restaurante {
 }
 
 export default function ViewGastronomia() {
+
   const [restaurantes, setRestaurantes] = useState<Restaurante[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRestaurante, setSelectedRestaurante] = useState<Restaurante | null>(null);
   const mapRef = useRef<MapView | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null); // Estado para permisos de cámara
+  const [cameraVisible, setCameraVisible] = useState(false); // Estado para visibilidad de la cámara
+  const [scanned, setScanned] = useState(false);
+
 
   // Variables para el sheet
   const translateY = useSharedValue(0);
@@ -101,6 +103,12 @@ export default function ViewGastronomia() {
     fetchRestaurantes();
   }, []);
 
+  useEffect(() => {
+    Camera.requestCameraPermissionsAsync().then(({ status }) => {
+      setHasPermission(status === "granted");
+    });
+  }, []);
+
   const handleRestaurantePress = (restaurante: Restaurante) => {
     setSelectedRestaurante(restaurante);
     if (mapRef.current) {
@@ -112,6 +120,33 @@ export default function ViewGastronomia() {
       });
     }
   };
+
+
+
+
+
+
+  const handleBarCodeScanned = (data: { data: string | string[]; }) => {
+     const restauranteNombre = selectedRestaurante?.nombre || '';
+    setScanned(true); // Detener el escaneo una vez que se detecta un QR
+
+    if (data.data.includes(restauranteNombre)) {
+      setCameraVisible(false);
+      Alert.alert("✅ Calificación aprobada", `Puedes calificar el restaurante: ${restauranteNombre}.`);
+      // Aquí puedes añadir la lógica para permitir la calificación del restaurante
+    } else {
+      Alert.alert(
+        "❌ Código inválido",
+        `El QR trajo la siguiente información: ${data}\nDebe coincidir con el nombre del restaurante: ${restauranteNombre}`
+      );
+      setCameraVisible(false);
+    }
+  };
+
+
+
+
+
 
   const StarRating = ({ rating }: { rating: number }) => {
     const stars = [];
@@ -145,11 +180,11 @@ export default function ViewGastronomia() {
     })
     .onEnd(() => {
       if (animationInProgress.current) return;
-      
+
       const shouldBringUp = translateY.value < -SCREEN_HEIGHT * 0.2;
-      
+
       animationInProgress.current = true;
-      
+
       if (shouldBringUp) {
         translateY.value = withTiming(MAX_TRANSLATE_Y, { duration: 300 }, () => {
           runOnJS(updateIsExpanded)(true);
@@ -160,20 +195,20 @@ export default function ViewGastronomia() {
         });
       }
     });
-    
+
   useEffect(() => {
     const timer = setTimeout(() => {
       animationInProgress.current = false;
     }, 300);
-    
+
     return () => clearTimeout(timer);
   }, [isExpanded]);
 
   const toggleSheet = () => {
     if (animationInProgress.current) return;
-    
+
     animationInProgress.current = true;
-    
+
     if (isExpanded) {
       translateY.value = withTiming(0, { duration: 250 }, () => {
         runOnJS(updateIsExpanded)(false);
@@ -293,19 +328,32 @@ export default function ViewGastronomia() {
                     </TouchableOpacity>
                   </Link>
 
-                  <TouchableOpacity style={styles.squareButton}>
+
+                  <TouchableOpacity
+                    style={styles.squareButton}
+
+
+                    onPress={() => {
+                      setCameraVisible(true);
+                      setScanned(false); // Resetear el estado de escaneo al abrir la cámara
+                    }}
+                  // Mostrar cámara al presionar "Calificar"
+                  >
                     <FontAwesome5 name="star" size={24} color="#000" />
                     <Text style={styles.squareButtonText}>Calificar</Text>
                   </TouchableOpacity>
+
+
+
                 </View>
               </View>
             )}
           />
         </View>
       </Animated.View>
-      
+
       {isExpanded && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.floatingCollapseButton}
           onPress={toggleSheet}
           activeOpacity={0.7}
@@ -316,7 +364,7 @@ export default function ViewGastronomia() {
       )}
 
       {!isExpanded && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.floatingExpandButton}
           onPress={toggleSheet}
           activeOpacity={0.7}
@@ -325,6 +373,33 @@ export default function ViewGastronomia() {
           <Text style={styles.floatingButtonText}>Ver más</Text>
         </TouchableOpacity>
       )}
+
+
+      {/* Modal con cámara */}
+      <Modal visible={cameraVisible} animationType="slide">
+        <CameraView
+          style={{ flex: 1 }}
+onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+        >
+          <View style={{ flex: 1, justifyContent: "flex-end", padding: 20 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#000000AA",
+                padding: 10,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                setCameraVisible(false);
+                setScanned(false); // Resetear el estado de escaneo al cerrar la cámara
+              }}
+            >
+              <Text style={{ color: "#FFF" }}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </CameraView>
+      </Modal>
 
       {/* Menú inferior */}
       <View style={styles.bottomMenuContainer}>
@@ -377,9 +452,9 @@ export default function ViewGastronomia() {
 
 // Los estilos son exactamente los mismos que en ViewCultura
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: 'transparent' 
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent'
   },
   loadingContainer: {
     flex: 1,
@@ -392,12 +467,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#4CAF50',
   },
-  mapContainer: { 
-    width: '100%', 
+  mapContainer: {
+    width: '100%',
     height: '50%',
     zIndex: 1
   },
-  mapView: { 
+  mapView: {
     flex: 1,
     width: '100%',
     height: '100%',
@@ -474,7 +549,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  list: { 
+  list: {
     padding: 10,
   },
   item: {
@@ -483,13 +558,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
   },
-  title: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
-    color: '#fff' 
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff'
   },
-  desc: { 
-    fontSize: 14, 
+  desc: {
+    fontSize: 14,
     color: '#fff',
     marginTop: 5,
   },
