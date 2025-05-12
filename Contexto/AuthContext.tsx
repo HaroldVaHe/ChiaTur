@@ -7,6 +7,7 @@ import { setDoc, doc, getDoc } from "firebase/firestore"; // Importar funciones 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  authLoading: boolean; // Add this line
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
@@ -24,6 +25,8 @@ export const AuthProvider = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false); // Carga para login/register
+
 
   // Observador de autenticación
   useEffect(() => {
@@ -37,22 +40,30 @@ export const AuthProvider = ({
 
 // Función de login
 const login = async (email: string, password: string) => {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  const user = userCredential.user;
-  const uid = user.uid;
+  setAuthLoading(true);
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    const uid = user.uid;
 
-  if (expoPushToken) {
-    await setDoc(doc(db, "users", uid), {
-      userId: uid,
-      name: email.split("@")[0],
-      email: email,
-      expoPushToken,
-    }, { merge: true }); // merge:true para no borrar datos previos
+    if (expoPushToken) {
+      await setDoc(doc(db, "users", uid), {
+        userId: uid,
+        name: email.split("@")[0],
+        email: email,
+        expoPushToken,
+      }, { merge: true });
+    }
+
+    await syncPushTokenIfNeeded(uid);
+  } finally {
+    setAuthLoading(false);
   }
-  await syncPushTokenIfNeeded(uid); // Sincronizar el token si es necesario
 };
 // Función de registro
 const register = async (email: string, password: string):Promise<UserCredential> => {
+  setAuthLoading(true);
+  try {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
   const uid = user.uid;
@@ -67,6 +78,9 @@ const register = async (email: string, password: string):Promise<UserCredential>
   }
   await syncPushTokenIfNeeded(uid); // Sincronizar el token si es necesario
   return userCredential; // 👈 Esta línea es clave
+} finally {
+  setAuthLoading(false);
+}
 
 };
 
@@ -91,7 +105,7 @@ const register = async (email: string, password: string):Promise<UserCredential>
   
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, authLoading }}>
       {children}
     </AuthContext.Provider>
   );

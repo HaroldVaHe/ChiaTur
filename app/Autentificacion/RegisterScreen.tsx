@@ -12,12 +12,14 @@ import {
 import { useAuth } from "@/Contexto/AuthContext";
 import { auth, createUserWithEmailAndPassword } from "@/utils/firebaseConfig";
 import { useRouter } from "expo-router";
+import { ActivityIndicator } from "react-native";
+
 
 // Asegúrate de ajustar esta ruta según tu estructura real
 import LogoChia from "@/assets/images/LogoChia.jpg";
 
 const RegisterScreen = () => {
-  const { register, loading } = useAuth(); // Asegúrate de que register devuelva credenciales con user
+  const { register, authLoading } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
@@ -33,12 +35,12 @@ const RegisterScreen = () => {
       const credenciales = await register(email, password);
       const uid = credenciales.user.uid; // obtener el uid del usuario
 
-router.push({
-  pathname: "/Autentificacion/SeleccionIntereses",
-  params: { uid }
-});
+      router.push({
+        pathname: "/Autentificacion/SeleccionIntereses",
+        params: { uid }
+      });
       Alert.alert("Cuenta creada con éxito");
-      
+
     } catch (error: any) {
       console.error("Error al crear la cuenta", error);
       Alert.alert("Error", "Hubo un error al crear la cuenta. Verifique sus datos.");
@@ -72,14 +74,17 @@ router.push({
         />
 
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.button, authLoading && styles.buttonDisabled]}
           onPress={handleRegister}
-          disabled={loading}
+          disabled={authLoading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? "Cargando..." : "Registrarse"}
-          </Text>
+          {authLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Registrarse</Text>
+          )}
         </TouchableOpacity>
+
 
         <TouchableOpacity onPress={() => router.push("/Autentificacion/LoginScreen")}>
           <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
@@ -149,6 +154,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: "#4CAF50",
     textAlign: "center",
-    fontSize: 16,
-  },
+    fontSize: 16,
+  },
 });

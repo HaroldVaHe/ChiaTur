@@ -2,12 +2,16 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ScrollView } from "react-native";
 import { useAuth } from "@/Contexto/AuthContext";
 import { useRouter } from "expo-router";
+import { ActivityIndicator } from "react-native";
+
 
 // Usa una ruta relativa correcta según tu estructura de carpetas
 import LogoChia from "@/assets/images/LogoChia.jpg";
 
 const LoginScreen = () => {
-  const { login, loading } = useAuth();
+  // const { login, loading } = useAuth();
+  const { login, authLoading } = useAuth();
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
@@ -55,14 +59,17 @@ const LoginScreen = () => {
         />
 
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.button, authLoading && styles.buttonDisabled]}
           onPress={handleLogin}
-          disabled={loading}
+          disabled={authLoading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? "Cargando..." : "Iniciar sesión"}
-          </Text>
+          {authLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Iniciar sesión</Text>
+          )}
         </TouchableOpacity>
+
 
         <TouchableOpacity onPress={() => router.push("/Autentificacion/RegisterScreen")}>
           <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
