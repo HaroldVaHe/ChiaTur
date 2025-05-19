@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Modal, Ale
 import { FontAwesome5, MaterialIcons, Entypo, Feather, AntDesign } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';import { LogBox } from 'react-native';
 import { CameraView, Camera } from "expo-camera"; // Importar componentes de cámara
+import { useAuth } from "@/Contexto/AuthContext";
 
 LogBox.ignoreLogs([
   'Warning: Text strings must be rendered within a <Text> component.',
@@ -14,8 +15,16 @@ export default function MainMenu() {
     const [hasPermission, setHasPermission] = useState<boolean | null>(null); // Estado para permisos de cámara
     const [cameraVisible, setCameraVisible] = useState(false); // Estado para visibilidad de la cámara
     const [scanned, setScanned] = useState(false);
-    
-    
+    const { logout, user } = useAuth();
+
+      const handleLogout = async () => {
+    try {
+      await logout();
+      console.log("Sesión cerrada correctamente");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
     const Validos = [
     { nombre: "Valvanera", ruta: "../QRs/Valvanera" },
     { nombre: "ParqueOspina", ruta: "../QRs/ParqueOspina" },
@@ -41,9 +50,12 @@ const handleBarCodeScanned = ({ data }: { data: string }) => {
 
   return (
     <View style={styles.container}>
-      {/* Contenido principal scrollable */}
+      
       <ScrollView style={styles.topSection}>
         <View style={styles.header}>
+           <TouchableOpacity style={styles.logoutButton} onPress={() => handleLogout()}>
+    <MaterialIcons name="logout" size={28} color="#fff" />
+  </TouchableOpacity>
        <TouchableOpacity
   style={styles.qrButton}
   onPress={() => {
@@ -82,7 +94,7 @@ const handleBarCodeScanned = ({ data }: { data: string }) => {
           5. Muy cerca encontrarás sitios como la Laguna de Guatavita y el Parque Jaime Duque, ideales para el turismo en familia.
         </Text>
       </ScrollView>
- {/* Modal con cámara */}
+
       <Modal visible={cameraVisible} animationType="slide">
         <CameraView
           style={{ flex: 1 }}
@@ -107,7 +119,7 @@ onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           </View>
         </CameraView>
       </Modal>
-      {/* Menú inferior */}
+    
       <View style={styles.bottomMenuContainer}>
         <View style={styles.bottomMenu}>
           <TouchableOpacity
@@ -126,8 +138,7 @@ onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             <Text style={styles.menuText}>Cultura</Text>
           </TouchableOpacity>
 
-          {/* Reducido el espacio entre los íconos */}
-          <View style={{ width: 15 }} /> {/* Menos espacio entre los íconos */}
+          <View style={{ width: 15 }} /> 
 
           <TouchableOpacity
             style={[styles.menuItem, pathname.includes('Entretenimiento') && styles.activeItem]}
@@ -146,7 +157,7 @@ onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           </TouchableOpacity>
         </View>
 
-        {/* Botón Home flotante */}
+
         <TouchableOpacity
           style={[styles.floatingButton, pathname.includes('MainMenu') && styles.activeFloatingButton]}
           onPress={() => router.push('../MenuPrincipal/MainMenu')}
@@ -262,5 +273,19 @@ qrButtonText: {
   fontSize: 16,
   fontWeight: 'bold',
 },
-
+logoutButton: {
+    position: 'absolute',
+  left: 0,
+  top: 0,
+  padding: 10,
+  zIndex: 1,
+ flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#4CAF50',
+  // padding: 10,
+  borderRadius: 8,
+  alignSelf: 'flex-start',
+  marginVertical: 10,
+  
+},
 });

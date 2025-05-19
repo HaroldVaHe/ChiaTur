@@ -35,10 +35,7 @@ const RegisterScreen = () => {
       const credenciales = await register(email, password);
       const uid = credenciales.user.uid; // obtener el uid del usuario
 
-      router.push({
-        pathname: "/Autentificacion/SeleccionIntereses",
-        params: { uid }
-      });
+     
       Alert.alert("Cuenta creada con éxito");
 
     } catch (error: any) {

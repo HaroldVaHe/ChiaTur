@@ -2,15 +2,16 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/utils/firebaseConfig"; // Usamos db desde aquí
-import { useAuth } from "@/Contexto/AuthContext"; // 👈 Importar el contexto de auth
+import AsyncStorage from "@react-native-async-storage/async-storage"; // 👈 Añadir
+import { db } from "@/utils/firebaseConfig";
+import { useAuth } from "@/Contexto/AuthContext";
 
 const interesesDisponibles = ["Gastronomía", "Entretenimiento", "Cultura", "Shopping"];
 
 const SeleccionIntereses = () => {
   const [seleccionados, setSeleccionados] = useState<string[]>([]);
   const router = useRouter();
-  const { user } = useAuth(); // 👈 Obtener el usuario autenticado
+  const { user, setIsNewUser } = useAuth();
 
   const toggleInteres = (interes: string) => {
     setSeleccionados((prev) =>
@@ -32,19 +33,28 @@ const SeleccionIntereses = () => {
     }
 
     try {
+      // 1. Guardar intereses en Firestore
       await setDoc(
         doc(db, "users", user.uid),
         { intereses: seleccionados },
         { merge: true }
       );
 
+      // 2. Marcar usuario como no nuevo
+      setIsNewUser(false);
+
+      // 3. Guardar usuario en AsyncStorage (persistencia)
+      await AsyncStorage.setItem("user", JSON.stringify(user));
+
+      // 4. Redirigir SIN historial
       router.replace("/MenuPrincipal/MainMenu");
+
     } catch (error) {
       console.error("Error al guardar preferencias:", error);
       Alert.alert("Error al guardar preferencias");
     }
   };
-
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Selecciona tus intereses</Text>

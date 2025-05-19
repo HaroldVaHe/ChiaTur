@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ScrollView } from "react-native";
 import { useAuth } from "@/Contexto/AuthContext";
 import { useRouter } from "expo-router";
@@ -10,12 +10,23 @@ import LogoChia from "@/assets/images/LogoChia.jpg";
 
 const LoginScreen = () => {
   // const { login, loading } = useAuth();
-  const { login, authLoading } = useAuth();
+const { login, authLoading, user, isNewUser } = useAuth();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
   const router = useRouter();
+useEffect(() => {
+  if (!authLoading) {
+    if (user && isNewUser) {
+      router.replace("/Autentificacion/SeleccionIntereses");
+    } else if (user) {
+      router.replace("../MenuPrincipal/MainMenu");
+      console.log("Usuario autenticado:", user.email);
+    }
+  }
+}, [authLoading, user, isNewUser]);
+
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -25,7 +36,7 @@ const LoginScreen = () => {
 
     try {
       await login(email, password);
-      router.push("/MenuPrincipal/MainMenu");
+      router.push("../MenuPrincipal/MainMenu");
     } catch (error: any) {
       console.error("Error al iniciar sesión", error);
       Alert.alert("Error", "Hubo un error al iniciar sesión. Verifique sus credenciales.");
