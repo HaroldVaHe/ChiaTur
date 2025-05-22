@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { APIResponse } from '@/utils/Responses'; // Asegúrate que esta ruta esté bien
+import { Ionicons } from '@expo/vector-icons';
 
 interface Message {
   id: string;
@@ -19,6 +20,7 @@ const ChatCultura = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { lugar } = useLocalSearchParams();
+  const navigation = useNavigation();
 
   const lugarData = lugar ? JSON.parse(lugar as string) : null;
 
@@ -105,6 +107,12 @@ const ChatCultura = () => {
 
   return (
     <View style={styles.container}>
+       <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={28} color="#333" />
+      </TouchableOpacity>
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
@@ -177,4 +185,19 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
   },
+  backButton: {
+  position: 'absolute',
+  top: 20,         // Ajusta según tu status bar
+  left: 10,
+  zIndex: 10,
+  backgroundColor: 'white',
+  borderRadius: 20,
+  padding: 4,
+  elevation: 3,    // Sombra en Android
+  shadowColor: '#000', // Sombra en iOS
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 2,
+},
+
 });

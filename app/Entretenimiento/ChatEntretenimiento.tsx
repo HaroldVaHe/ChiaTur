@@ -10,8 +10,9 @@ import {
   StyleSheet,
   ActivityIndicator
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { APIResponse } from '@/utils/Responses';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Message {
   id: string;
@@ -26,6 +27,8 @@ const ChatEntretenimiento = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+
 
   // Aquí usamos 'lugar' porque así lo enviamos desde ViewEntretenimiento:
   const { lugar } = useLocalSearchParams();
@@ -107,6 +110,12 @@ const ChatEntretenimiento = () => {
 
   return (
     <View style={styles.container}>
+     <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={28} color="#333" />
+      </TouchableOpacity>
       <FlatList
         data={messages}
         keyExtractor={(i) => i.id}
@@ -175,5 +184,20 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20
   },
+  backButton: {
+  position: 'absolute',
+  top: 20,         // Ajusta según tu status bar
+  left: 10,
+  zIndex: 10,
+  backgroundColor: 'white',
+  borderRadius: 20,
+  padding: 4,
+  elevation: 3,    // Sombra en Android
+  shadowColor: '#000', // Sombra en iOS
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 2,
+},
+
   sendButtonText: { color: '#FFF', fontWeight: 'bold' }
 });

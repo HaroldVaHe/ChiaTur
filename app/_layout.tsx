@@ -94,9 +94,9 @@ export default function RootLayout() {
       notificationListener.current &&
 
         Notifications.removeNotificationSubscription(notificationListener.current);
-        responseListener.current &&
+      responseListener.current &&
         Notifications.removeNotificationSubscription(responseListener.current);
-      
+
     };
   }, []);
 
@@ -106,6 +106,8 @@ export default function RootLayout() {
         <View style={styles.container}>
           <Stack
             screenOptions={{
+              headerShown: false, // <--- Línea clave
+
               contentStyle: {
                 backgroundColor: "#F1F2EE",
               },
